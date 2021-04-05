@@ -1,0 +1,29 @@
+# Dockerfile References: https://docs.docker.com/engine/reference/builder/
+
+FROM golang:1.14-alpine
+
+# Add Maintainer Info
+LABEL maintainer="Charmixer"
+
+RUN apk add --update --no-cache ca-certificates git curl
+
+# Set the Current Working Directory inside the container
+WORKDIR $GOPATH/src/github.com/charmixer/golang-api-template
+
+# Copy everything from the current directory to the PWD(Present Working Directory) inside the container
+COPY . .
+
+# Download all the dependencies
+# https://stackoverflow.com/questions/28031603/what-do-three-dots-mean-in-go-command-line-invocations
+RUN go get -d -v ./...
+
+# Development requires fresh
+RUN go get github.com/ivpusic/rerun
+# Cache for rerun
+RUN mkdir /.cache
+
+# This container exposes port 443 to the docker network
+EXPOSE 8080
+
+ENTRYPOINT ["rerun"]
+CMD ["-a", "serve"]
