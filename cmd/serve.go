@@ -1,6 +1,23 @@
 package cmd
 
 import (
+	"fmt"
+)
+
+type ServeCmd struct {
+	// version   bool `short:"v" long:"version" description:"display version"`
+}
+
+func (v *ServeCmd) Execute(args []string) error {
+	fmt.Println("servecmd")
+	fmt.Printf("%#v\n", v)
+	fmt.Printf("%#v\n", Application.Config)
+
+	return nil
+}
+
+/*
+import (
 	"github.com/charmixer/golang-api-template/pkg/serve"
 	"github.com/spf13/cobra"
 )
@@ -36,4 +53,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
+}*/

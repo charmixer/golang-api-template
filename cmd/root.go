@@ -2,6 +2,80 @@ package cmd
 
 import (
 	"os"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/jessevdk/go-flags"
+)
+
+type Cli struct {
+	ServeCmd `command:"serve" description:"serves the application"`
+}
+
+type App struct {
+	Cli
+
+	Config struct {
+		Log struct {
+			Debug  bool
+			Format string
+		}
+
+		Serve struct {
+			Public struct {
+				Port int
+			}
+			TLS struct {
+				Cert struct {
+					Path string
+				}
+				Key struct {
+					Path string
+				}
+			}
+		}
+
+	}
+}
+
+var Application App
+
+func Execute(){
+	flags.Parse(&Application)
+}
+
+func init() {
+
+	configFile := os.Getenv("CFG_PATH")
+
+	files := []string{}
+	if configFile != "" {
+		files = append(files, configFile)
+	}
+
+	for _, file := range files {
+		yamlFile, err := ioutil.ReadFile(file)
+		if err != nil {
+			panic(err)
+		}
+		err = yaml.Unmarshal(yamlFile, &Application.Config)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	err := envconfig.Process("CFG", &Application.Config)
+  if err != nil {
+		panic(err)
+  }
+}
+
+/*
+package cmd
+
+import (
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -93,3 +167,4 @@ func initLogging() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 }
+*/

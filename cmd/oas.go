@@ -1,6 +1,26 @@
 package cmd
 
 import (
+	"fmt"
+)
+
+type OasCmd struct {
+	// version   bool `short:"v" long:"version" description:"display version"`
+}
+
+func (v *OasCmd) Execute(args []string) error {
+	fmt.Println("servecmd")
+	fmt.Printf("%#v\n", v)
+	fmt.Printf("%#v\n", Application.Config)
+
+	return nil
+}
+
+
+/*
+package cmd
+
+import (
 	"github.com/charmixer/golang-api-template/pkg/oas"
 	"github.com/spf13/cobra"
 )
@@ -28,4 +48,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
+}*/
