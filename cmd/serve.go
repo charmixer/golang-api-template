@@ -4,11 +4,12 @@ import (
 	"fmt"
 )
 
-type ServeCmd struct {
-	// version   bool `short:"v" long:"version" description:"display version"`
+type Serve struct {
+	Version bool `short:"v" long:"version" description:"display version"`
+	Port int
 }
 
-func (v *ServeCmd) Execute(args []string) error {
+func (v *Serve) Execute(args []string) error {
 	fmt.Println("servecmd")
 	fmt.Printf("%#v\n", v)
 	fmt.Printf("%#v\n", Application.Config)

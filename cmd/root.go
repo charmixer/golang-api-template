@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 
@@ -9,12 +10,10 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-type Cli struct {
-	ServeCmd `command:"serve" description:"serves the application"`
-}
-
 type App struct {
-	Cli
+	Cli struct {
+		Serve `command:"serve" description:"serves the application"`
+	}
 
 	Config struct {
 		Log struct {
@@ -24,7 +23,7 @@ type App struct {
 
 		Serve struct {
 			Public struct {
-				Port int
+				Port int `short:"p" long:"port" description:"Port to serve app on"`
 			}
 			TLS struct {
 				Cert struct {
@@ -42,7 +41,16 @@ type App struct {
 var Application App
 
 func Execute(){
-	flags.Parse(&Application)
+	var parser = flags.NewParser(&Application, flags.HelpFlag | flags.PassDoubleDash)
+	_,err := parser.Parse()
+
+	if err != nil {
+		e := err.(*flags.Error)
+		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
+			fmt.Printf("%s\n", e.Message)
+		}
+		parser.WriteHelp(os.Stdout)
+	}
 }
 
 func init() {
