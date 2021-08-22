@@ -1,5 +1,5 @@
 package serve
-
+/*
 import (
 	"context"
 	"fmt"
@@ -129,3 +129,4 @@ func RunServe() func(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 }
+*/

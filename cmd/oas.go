@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"os"
 	"fmt"
+
+	"github.com/charmixer/oas/exporter"
+	"github.com/charmixer/golang-api-template/router"
 )
 
 type OasCmd struct {
@@ -9,9 +13,23 @@ type OasCmd struct {
 }
 
 func (v *OasCmd) Execute(args []string) error {
-	fmt.Println("servecmd")
+	fmt.Println("oascmd")
 	fmt.Printf("%#v\n", v)
-	fmt.Printf("%#v\n", Application.Config)
+	fmt.Printf("%#v\n", Application)
+
+	oas := router.NewOas()
+
+	oasModel := exporter.ToOasModel(oas)
+	oasYaml, err := exporter.ToYaml(oasModel)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println(oasYaml)
+
+	os.Exit(0)
 
 	return nil
 }

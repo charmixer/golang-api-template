@@ -6,36 +6,18 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 
-	"github.com/kelseyhightower/envconfig"
-	"github.com/jessevdk/go-flags"
+	"github.com/charmixer/envconfig"
+	"github.com/charmixer/go-flags"
 )
 
 type App struct {
-	Cli struct {
-		Serve `command:"serve" description:"serves the application"`
+	Log struct {
+		Debug  bool
+		Format string
 	}
 
-	Config struct {
-		Log struct {
-			Debug  bool
-			Format string
-		}
+	Serve `command:"serve" description:"serves endpoints"`
 
-		Serve struct {
-			Public struct {
-				Port int `short:"p" long:"port" description:"Port to serve app on"`
-			}
-			TLS struct {
-				Cert struct {
-					Path string
-				}
-				Key struct {
-					Path string
-				}
-			}
-		}
-
-	}
 }
 
 var Application App
@@ -43,6 +25,7 @@ var Application App
 func Execute(){
 	var parser = flags.NewParser(&Application, flags.HelpFlag | flags.PassDoubleDash)
 	_,err := parser.Parse()
+	fmt.Printf("%#v\n", Application)
 
 	if err != nil {
 		e := err.(*flags.Error)
@@ -51,32 +34,39 @@ func Execute(){
 		}
 		parser.WriteHelp(os.Stdout)
 	}
+
+	os.Exit(0)
 }
 
 func init() {
 
+	// Only option which isn't available as normal - path to config file
 	configFile := os.Getenv("CFG_PATH")
 
+	// Collect config files (just preparation for multiple files)
 	files := []string{}
 	if configFile != "" {
 		files = append(files, configFile)
 	}
 
+	// Parse all config files into struct (config files has lowest priority)
 	for _, file := range files {
 		yamlFile, err := ioutil.ReadFile(file)
 		if err != nil {
 			panic(err)
 		}
-		err = yaml.Unmarshal(yamlFile, &Application.Config)
+		err = yaml.Unmarshal(yamlFile, &Application)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	err := envconfig.Process("CFG", &Application.Config)
+	// Parse environment into struct (2. priority, flags has priority 1)
+	err := envconfig.Process("CFG", &Application)
   if err != nil {
 		panic(err)
   }
+
 }
 
 /*

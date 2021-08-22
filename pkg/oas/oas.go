@@ -1,5 +1,5 @@
 package oas
-
+/*
 import (
 	"os"
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/charmixer/golang-api-template/router"
 
 	// "github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
+	// "github.com/spf13/cobra"
 )
 
 // RunServe the main event loop for the service
@@ -30,4 +30,4 @@ func RunOas() func(cmd *cobra.Command, args []string) {
 
 		os.Exit(0)
 	}
-}
+}*/

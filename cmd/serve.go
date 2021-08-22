@@ -1,18 +1,112 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/charmixer/golang-api-template/middleware"
+	"github.com/charmixer/golang-api-template/router"
+	"github.com/charmixer/golang-api-template/app"
+
+	"github.com/charmixer/oas/exporter"
+
+	"github.com/justinas/alice"
+	"github.com/rs/zerolog/log"
 )
 
 type Serve struct {
-	Version bool `short:"v" long:"version" description:"display version"`
-	Port int
+	Public struct {
+		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
+		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"127.0.0.0"`
+		Domain string `short:"d" long:"domain" description:"Domain to access app through"`
+	}
+	Timeout struct {
+		Write int `long:"write-timeout" description:"Timeout in seconds for write"`
+		Read int `long:"read-timeout" description:"Timeout in seconds for read"`
+		ReadHeader int `long:"read-header-timeout" description:"Timeout in seconds for read-header"`
+		Idle int `long:"idle-timeout" description:"Timeout in seconds for idle"`
+		Grace int `long:"grace-timeout" description:"Timeout in seconds before shutting down"`
+	}
+	TLS struct {
+		Cert struct {
+			Path string
+		}
+		Key struct {
+			Path string
+		}
+	}
 }
 
 func (v *Serve) Execute(args []string) error {
 	fmt.Println("servecmd")
 	fmt.Printf("%#v\n", v)
-	fmt.Printf("%#v\n", Application.Config)
+	fmt.Printf("%#v\n", Application)
+
+	ip := Application.Serve.Public.Ip
+	port := Application.Serve.Public.Port
+	//domain := Application.Serve.Public.Domain
+
+	readTimeout := Application.Timeout.Read
+	readHeaderTimeout := Application.Timeout.ReadHeader
+	writeTimeout := Application.Timeout.Write
+	idleTimeout := Application.Timeout.Idle
+	gracefulTimeout := Application.Timeout.Grace
+
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	app.Env.Addr = addr
+
+	oas := router.NewOas()
+	oasModel := exporter.ToOasModel(oas)
+	spec, err := exporter.ToYaml(oasModel)
+	if err != nil {
+		log.Error().Err(err)
+	}
+	app.Env.OpenAPI = spec
+	route := router.NewRouter(oas)
+
+	chain := alice.New(middleware.Context, middleware.Logging)
+
+	srv := &http.Server{
+		Addr: addr,
+		// Good practice to set timeouts to avoid Slowloris attacks.
+		WriteTimeout:      time.Second * time.Duration(writeTimeout),
+		ReadTimeout:       time.Second * time.Duration(readTimeout),
+		ReadHeaderTimeout: time.Second * time.Duration(readHeaderTimeout),
+		IdleTimeout:       time.Second * time.Duration(idleTimeout),
+		Handler:           chain.Then(route), // Pass our instance of gorilla/mux in.
+	}
+
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		log.Info().Msg("Listening on " + addr)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Error().Err(err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
+
+	// Block until we receive our signal.
+	<-c
+
+	// Create a deadline to wait for.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(gracefulTimeout))
+	defer cancel()
+	// Doesn't block if no connections, but will otherwise wait
+	// until the timeout deadline.
+	srv.Shutdown(ctx)
+	// Optionally, you could run srv.Shutdown in a goroutine and block on
+	// <-ctx.Done() if your application should wait for other services
+	// to finalize based on context cancellation.
+	log.Info().Msg("shutting down")
+	os.Exit(0)
 
 	return nil
 }
