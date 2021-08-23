@@ -25,11 +25,11 @@ type Serve struct {
 		Domain string `short:"d" long:"domain" description:"Domain to access app through" default:"127.0.0.1"`
 	}
 	Timeout struct {
-		Write int `long:"write-timeout" description:"Timeout in seconds for write"`
-		Read int `long:"read-timeout" description:"Timeout in seconds for read"`
-		ReadHeader int `long:"read-header-timeout" description:"Timeout in seconds for read-header"`
-		Idle int `long:"idle-timeout" description:"Timeout in seconds for idle"`
-		Grace int `long:"grace-timeout" description:"Timeout in seconds before shutting down"`
+		Write int `long:"write-timeout" description:"Timeout in seconds for write" default:"10"`
+		Read int `long:"read-timeout" description:"Timeout in seconds for read" default:"5"`
+		ReadHeader int `long:"read-header-timeout" description:"Timeout in seconds for read-header" default:"5"`
+		Idle int `long:"idle-timeout" description:"Timeout in seconds for idle" default:"10"`
+		Grace int `long:"grace-timeout" description:"Timeout in seconds before shutting down" default:"15"`
 	}
 	TLS struct {
 		Cert struct {
@@ -41,23 +41,11 @@ type Serve struct {
 	}
 }
 
-func (v *Serve) Execute(args []string) error {
-	ip := Application.Serve.Public.Ip
-	port := Application.Serve.Public.Port
-	domain := Application.Serve.Public.Domain
-
-	app.Env.Ip = ip
-	app.Env.Port = port
-	app.Env.Domain = domain
-
-	readTimeout := Application.Timeout.Read
-	readHeaderTimeout := Application.Timeout.ReadHeader
-	writeTimeout := Application.Timeout.Write
-	idleTimeout := Application.Timeout.Idle
-	gracefulTimeout := Application.Timeout.Grace
-
-	addr := fmt.Sprintf("%s:%d", ip, port)
-	app.Env.Addr = addr
+func (cmd *Serve) Execute(args []string) error {
+	app.Env.Ip     = Application.Serve.Public.Ip
+	app.Env.Port   = Application.Serve.Public.Port
+	app.Env.Domain = Application.Serve.Public.Domain
+	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
 	oas := router.NewOas()
 	oasModel := exporter.ToOasModel(oas)
@@ -66,23 +54,24 @@ func (v *Serve) Execute(args []string) error {
 		log.Error().Err(err)
 	}
 	app.Env.OpenAPI = spec
+
 	route := router.NewRouter(oas)
 
 	chain := alice.New(middleware.Context, middleware.Logging)
 
 	srv := &http.Server{
-		Addr: addr,
+		Addr: app.Env.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout:      time.Second * time.Duration(writeTimeout),
-		ReadTimeout:       time.Second * time.Duration(readTimeout),
-		ReadHeaderTimeout: time.Second * time.Duration(readHeaderTimeout),
-		IdleTimeout:       time.Second * time.Duration(idleTimeout),
+		WriteTimeout:      time.Second * time.Duration(cmd.Timeout.Write),
+		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
+		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
+		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
 		Handler:           chain.Then(route), // Pass our instance of gorilla/mux in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		log.Info().Msg("Listening on " + addr)
+		log.Info().Msg("Listening on " + app.Env.Addr)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Error().Err(err)
 		}
@@ -97,7 +86,7 @@ func (v *Serve) Execute(args []string) error {
 	<-c
 
 	// Create a deadline to wait for.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(gracefulTimeout))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cmd.Timeout.Idle))
 	defer cancel()
 	// Doesn't block if no connections, but will otherwise wait
 	// until the timeout deadline.
@@ -110,42 +99,3 @@ func (v *Serve) Execute(args []string) error {
 
 	return nil
 }
-
-/*
-import (
-	"github.com/charmixer/golang-api-template/pkg/serve"
-	"github.com/spf13/cobra"
-)
-
-// serveCmd represents the serve command
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Serve endpoints",
-	Long:  `Serve endpoints`,
-	Run:   serve.RunServe(),
-}
-
-func init() {
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	serveCmd.Flags().IntP("port", "p", 8080, "The port used for serving the api.")
-	serveCmd.Flags().StringP("ip", "i", "0.0.0.0", "The ip used for serving the api.")
-	serveCmd.Flags().StringP("domain", "d", "localhost", "The domain used to access the api.")
-
-	serveCmd.Flags().IntP("write-timeout", "", 10, "Timeout in seconds when writing response.")
-	serveCmd.Flags().IntP("read-timeout", "", 10, "Timeout in seconds when reading request headers and body.")
-	serveCmd.Flags().IntP("read-header-timeout", "", 5, "Timeout in seconds when reading request headers.")
-	serveCmd.Flags().IntP("idle-timeout", "", 15, "Timeout in seconds between requests when keep-alive is enabled. If 0 read-timeout is used.")
-	serveCmd.Flags().IntP("graceful-timeout", "", 15, "Timeout in seconds when shutting down.")
-
-	rootCmd.AddCommand(serveCmd)
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}*/

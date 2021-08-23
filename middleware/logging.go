@@ -21,16 +21,6 @@ func wrapResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{ResponseWriter: w, Status: http.StatusOK}
 }
 
-func (rw *responseWriter) WriteHeader(code int) {
-	if !rw.wroteHeader {
-		rw.Status = code
-		rw.ResponseWriter.WriteHeader(code)
-		rw.wroteHeader = true
-	}
-
-	return
-}
-
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
