@@ -17,6 +17,7 @@ type App struct {
 	}
 
 	Serve `command:"serve" description:"serves endpoints"`
+	Oas   `command:"oas" description:"Retrieve oas document"`
 
 }
 

@@ -48,7 +48,11 @@ func (v *Serve) Execute(args []string) error {
 
 	ip := Application.Serve.Public.Ip
 	port := Application.Serve.Public.Port
-	//domain := Application.Serve.Public.Domain
+	domain := Application.Serve.Public.Domain
+
+	app.Env.Ip = ip
+	app.Env.Domain = domain
+	app.Env.Port = port
 
 	readTimeout := Application.Timeout.Read
 	readHeaderTimeout := Application.Timeout.ReadHeader

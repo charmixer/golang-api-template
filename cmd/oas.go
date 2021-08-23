@@ -8,11 +8,11 @@ import (
 	"github.com/charmixer/golang-api-template/router"
 )
 
-type OasCmd struct {
+type Oas struct {
 	// version   bool `short:"v" long:"version" description:"display version"`
 }
 
-func (v *OasCmd) Execute(args []string) error {
+func (v *Oas) Execute(args []string) error {
 	fmt.Println("oascmd")
 	fmt.Printf("%#v\n", v)
 	fmt.Printf("%#v\n", Application)
