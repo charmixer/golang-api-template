@@ -21,8 +21,8 @@ import (
 type Serve struct {
 	Public struct {
 		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
-		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"127.0.0.0"`
-		Domain string `short:"d" long:"domain" description:"Domain to access app through"`
+		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
+		Domain string `short:"d" long:"domain" description:"Domain to access app through" default:"127.0.0.1"`
 	}
 	Timeout struct {
 		Write int `long:"write-timeout" description:"Timeout in seconds for write"`
@@ -42,17 +42,13 @@ type Serve struct {
 }
 
 func (v *Serve) Execute(args []string) error {
-	fmt.Println("servecmd")
-	fmt.Printf("%#v\n", v)
-	fmt.Printf("%#v\n", Application)
-
 	ip := Application.Serve.Public.Ip
 	port := Application.Serve.Public.Port
 	domain := Application.Serve.Public.Domain
 
 	app.Env.Ip = ip
-	app.Env.Domain = domain
 	app.Env.Port = port
+	app.Env.Domain = domain
 
 	readTimeout := Application.Timeout.Read
 	readHeaderTimeout := Application.Timeout.ReadHeader
