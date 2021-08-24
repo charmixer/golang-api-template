@@ -78,7 +78,7 @@ func parseEnv(prefix string, config interface{}) {
 }
 
 func parseFlags(config interface{}) {
-	_,err = parser.Parse()
+	_,err := parser.Parse()
 
 	if err != nil {
 		e := err.(*flags.Error)
