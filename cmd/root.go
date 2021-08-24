@@ -20,14 +20,14 @@ type App struct {
 	}
 
 	Serve ServeCmd `command:"serve" description:"serves endpoints"`
-	Oas OasCmd   `command:"oas" description:"Retrieve oas document"`
+	Oas   OasCmd   `command:"oas" description:"Retrieve oas document"`
 }
 
 var Application App
+var parser = flags.NewParser(&Application, flags.HelpFlag | flags.PassDoubleDash)
 
 func Execute(){
-	var parser = flags.NewParser(&Application, flags.HelpFlag | flags.PassDoubleDash)
-	_,err := parser.Parse()
+	_,err := parser.Execute()
 
 	if err != nil {
 		e := err.(*flags.Error)
@@ -41,39 +41,55 @@ func Execute(){
 }
 
 func init() {
+	// 3. Priority: Config file
+	parseYamlFile(os.Getenv("CFG_PATH"), &Application)
 
-	// Only option which isn't available as normal - path to config file
-	configFile := os.Getenv("CFG_PATH")
+	// 2. Priority: Environment
+	parseEnv("CFG", &Application)
 
-	// Collect config files (just preparation for multiple files)
-	files := []string{}
-	if configFile != "" {
-		files = append(files, configFile)
+	// 1. Priority: Flags
+	parseFlags(&Application)
+
+	// 0. Priority: Defaults, if none of above is found
+
+	initLogging()
+}
+
+func parseYamlFile(file string, config interface{}) {
+	if file == "" {
+		return
 	}
 
-	// Parse all config files into struct (config files has lowest priority)
-	for _, file := range files {
-		yamlFile, err := ioutil.ReadFile(file)
-		if err != nil {
-			panic(err)
-		}
-		err = yaml.Unmarshal(yamlFile, &Application)
-		if err != nil {
-			panic(err)
-		}
+	yamlFile, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
 	}
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		panic(err)
+	}
+}
 
-	// Parse environment into struct (2. priority, flags has priority 1)
-	err := envconfig.Process("CFG", &Application)
+func parseEnv(prefix string, config interface{}) {
+	err := envconfig.Process(prefix, config)
   if err != nil {
 		panic(err)
   }
+}
 
-	initLogging() // FIXME too early, haven't parsed flags
+func parseFlags(config interface{}) {
+	_,err = parser.Parse()
+
+	if err != nil {
+		e := err.(*flags.Error)
+		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
+			fmt.Printf("%s\n", e.Message)
+		}
+		parser.WriteHelp(os.Stdout)
+	}
 }
 
 func initLogging() {
-
 	if Application.Log.Verbose {
 		log.Logger = log.With().Caller().Logger()
 	}
