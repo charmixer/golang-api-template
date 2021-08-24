@@ -19,8 +19,8 @@ type App struct {
 		Format string `long:"log-format" description:"Logging format" choice:"json" choice:"plain"`
 	}
 
-	Serve `command:"serve" description:"serves endpoints"`
-	Oas   `command:"oas" description:"Retrieve oas document"`
+	Serve ServeCmd `command:"serve" description:"serves endpoints"`
+	Oas OasCmd   `command:"oas" description:"Retrieve oas document"`
 }
 
 var Application App

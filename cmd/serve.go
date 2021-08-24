@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Serve struct {
+type ServeCmd struct {
 	Public struct {
 		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
 		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
@@ -41,7 +41,7 @@ type Serve struct {
 	}
 }
 
-func (cmd *Serve) Execute(args []string) error {
+func (cmd *ServeCmd) Execute(args []string) error {
 	app.Env.Ip     = Application.Serve.Public.Ip
 	app.Env.Port   = Application.Serve.Public.Port
 	app.Env.Domain = Application.Serve.Public.Domain
