@@ -9,24 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// responseWriter is a minimal wrapper for http.ResponseWriter that allows the
-// written HTTP status code to be captured for logging.
-type responseWriter struct {
-	http.ResponseWriter
-	Status      int
-	wroteHeader bool
-}
-
-func wrapResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{ResponseWriter: w, Status: http.StatusOK}
-}
-
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		start := time.Now()
 
-		wrapped := wrapResponseWriter(w)
+		wrapped := w.(*responseWriter)
 
 		next.ServeHTTP(wrapped, r)
 

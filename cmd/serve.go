@@ -14,7 +14,6 @@ import (
 
 	"github.com/charmixer/oas/exporter"
 
-	"github.com/justinas/alice"
 	"github.com/rs/zerolog/log"
 )
 
@@ -55,9 +54,8 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	}
 	app.Env.OpenAPI = spec
 
+	chain := middleware.GetChain()
 	route := router.NewRouter(oas)
-
-	chain := alice.New(middleware.Context, middleware.Logging)
 
 	srv := &http.Server{
 		Addr: app.Env.Addr,

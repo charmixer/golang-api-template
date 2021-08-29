@@ -9,10 +9,6 @@ import (
 
 	"github.com/charmixer/oas/api"
 
-	// "github.com/prometheus/client_golang/prometheus"
-	// "github.com/prometheus/client_golang/prometheus/promauto"
-	// "github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/gorilla/mux"
 )
 
@@ -32,7 +28,7 @@ func NewOas() (oas api.Api){
 	oas.NewPath("GET",  "/health", health.GetHealth, health.GetHealthSpec(), []api.Tag{healthTag})
 	oas.NewPath("POST", "/health", health.PostHealth, health.PostHealthSpec(), []api.Tag{healthTag})
 
-	oas.NewPath("GET",  "/metrics", metrics.GetMetrics(), health.GetHealthSpec(), []api.Tag{healthTag})
+	oas.NewPath("GET",  "/metrics", metrics.GetMetrics, health.GetHealthSpec(), []api.Tag{healthTag})
 
 	return oas
 }

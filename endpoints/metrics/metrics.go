@@ -1,22 +1,12 @@
 package metrics
 
 import (
-	"net/http"
-
-	// "github.com/prometheus/client_golang/prometheus"
-	// "github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 )
 
-type GetMetricsRequest struct {
-
-}
-type GetMetricsResponse struct {
-	cpu_usage int
-	mem_usage int
-}
-
-
-func GetMetrics() (http.HandlerFunc) {
-	return promhttp.Handler().(http.HandlerFunc)
+func GetMetrics(w http.ResponseWriter, r *http.Request) {
+	t := promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).(http.HandlerFunc)
+	t.ServeHTTP(w, r)
 }
