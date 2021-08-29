@@ -2,6 +2,10 @@ package metrics
 
 import (
 	"net/http"
+
+	// "github.com/prometheus/client_golang/prometheus"
+	// "github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type GetMetricsRequest struct {
@@ -13,6 +17,6 @@ type GetMetricsResponse struct {
 }
 
 
-func GetMetrics(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("get /metrics\n"))
+func GetMetrics() (http.HandlerFunc) {
+	return promhttp.Handler().(http.HandlerFunc)
 }
