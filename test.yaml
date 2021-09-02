@@ -1,6 +1,0 @@
-log:
-  debug: true
-
-serve:
-  public:
-    port: 1111
