@@ -41,9 +41,9 @@ type ServeCmd struct {
 }
 
 func (cmd *ServeCmd) Execute(args []string) error {
-	app.Env.Ip     = Application.Serve.Public.Ip
-	app.Env.Port   = Application.Serve.Public.Port
-	app.Env.Domain = Application.Serve.Public.Domain
+	app.Env.Ip     = cmd.Public.Ip
+	app.Env.Port   = cmd.Public.Port
+	app.Env.Domain = cmd.Public.Domain
 	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
 	oas := router.NewOas()
