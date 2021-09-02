@@ -2,84 +2,99 @@ package cmd
 
 import (
 	"os"
+	"fmt"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 
-	"github.com/spf13/cobra"
-
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
+
+	"github.com/charmixer/envconfig"
+	"github.com/charmixer/go-flags"
 )
 
-var cfgFile string
-var verbose bool
-var console bool
+type App struct {
+	Log struct {
+		Verbose  bool `long:"verbose" description:"Verbose logging"`
+		Format string `long:"log-format" description:"Logging format" choice:"json" choice:"plain"`
+	}
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "golang-api-template",
-	Short: "Template api",
-	Long:  `Template api`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Serve ServeCmd `command:"serve" description:"serves endpoints"`
+	Oas   OasCmd   `command:"oas" description:"Retrieve oas document"`
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		log.Error().Err(err)
-		os.Exit(1)
+var Application App
+var parser = flags.NewParser(&Application, flags.HelpFlag | flags.PassDoubleDash)
+
+func Execute(){
+	_,err := parser.Execute()
+
+	if err != nil {
+		e := err.(*flags.Error)
+		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
+			fmt.Printf("%s\n", e.Message)
+		}
+		parser.WriteHelp(os.Stdout)
 	}
+
+	os.Exit(0)
 }
 
 func init() {
-	cobra.OnInitialize(initLogging)
-	cobra.OnInitialize(initConfig)
+	// 3. Priority: Config file
+	parseYamlFile(os.Getenv("CFG_PATH"), &Application)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// 2. Priority: Environment
+	parseEnv("CFG", &Application)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.golang-api-template.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
-	rootCmd.PersistentFlags().BoolVarP(&console, "console", "c", false, "enable human readable console output")
+	// 1. Priority: Flags
+	parseFlags(&Application)
+
+	// 0. Priority: Defaults, if none of above is found
+
+	initLogging()
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Error().Err(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".golang-api-template" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".golang-api-template")
+func parseYamlFile(file string, config interface{}) {
+	if file == "" {
+		return
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
+	yamlFile, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		panic(err)
+	}
+}
 
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Info().Msgf("Using config file: %s", viper.ConfigFileUsed())
+func parseEnv(prefix string, config interface{}) {
+	err := envconfig.Process(prefix, config)
+  if err != nil {
+		panic(err)
+  }
+}
+
+func parseFlags(config interface{}) {
+	err := parser.ParseFlags()
+
+	if err != nil {
+		e := err.(*flags.Error)
+		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
+			fmt.Printf("%s\n", e.Message)
+		}
+		parser.WriteHelp(os.Stdout)
 	}
 }
 
 func initLogging() {
-
-	if verbose {
+	if Application.Log.Verbose {
 		log.Logger = log.With().Caller().Logger()
 	}
 
-	if console {
+	if Application.Log.Format == "plain" {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
@@ -89,7 +104,7 @@ func initLogging() {
 	zerolog.MessageFieldName = "msg"
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if verbose {
+	if Application.Log.Verbose {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 }

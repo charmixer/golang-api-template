@@ -1,7 +1,9 @@
 package router
 
 import (
-	_ "github.com/charmixer/golang-api-template/endpoints/metrics"
+	_ "net/http"
+
+	"github.com/charmixer/golang-api-template/endpoints/metrics"
 	"github.com/charmixer/golang-api-template/endpoints/health"
 	"github.com/charmixer/golang-api-template/endpoints/openapi"
 
@@ -20,11 +22,13 @@ func NewOas() (oas api.Api){
 	docsTag := api.Tag{Name: "Docs", Description: "Documentation stuff"}
 	healthTag := api.Tag{Name: "Health", Description: "Health stuff"}
 
-	oas.NewPath("GET", "/docs", openapi.GetOpenapiDocs, openapi.GetOpenapiDocsSpec(), []api.Tag{docsTag})
-	oas.NewPath("GET", "/docs/openapi.yaml", openapi.GetOpenapi, openapi.GetOpenapiSpec(), []api.Tag{docsTag})
+	oas.NewPath("GET",  "/docs", openapi.GetOpenapiDocs, openapi.GetOpenapiDocsSpec(), []api.Tag{docsTag})
+	oas.NewPath("GET",  "/docs/openapi.yaml", openapi.GetOpenapi, openapi.GetOpenapiSpec(), []api.Tag{docsTag})
 
-	oas.NewPath("GET", "/health", health.GetHealth, health.GetHealthSpec(), []api.Tag{healthTag})
+	oas.NewPath("GET",  "/health", health.GetHealth, health.GetHealthSpec(), []api.Tag{healthTag})
 	oas.NewPath("POST", "/health", health.PostHealth, health.PostHealthSpec(), []api.Tag{healthTag})
+
+	oas.NewPath("GET",  "/metrics", metrics.GetMetrics, health.GetHealthSpec(), []api.Tag{healthTag})
 
 	return oas
 }

@@ -1,39 +1,99 @@
 package cmd
 
 import (
-	"github.com/charmixer/golang-api-template/pkg/serve"
-	"github.com/spf13/cobra"
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/charmixer/golang-api-template/middleware"
+	"github.com/charmixer/golang-api-template/router"
+	"github.com/charmixer/golang-api-template/app"
+
+	"github.com/charmixer/oas/exporter"
+
+	"github.com/rs/zerolog/log"
 )
 
-// serveCmd represents the serve command
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "Serve endpoints",
-	Long:  `Serve endpoints`,
-	Run:   serve.RunServe(),
+type ServeCmd struct {
+	Public struct {
+		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
+		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
+		Domain string `short:"d" long:"domain" description:"Domain to access app through" default:"127.0.0.1"`
+	}
+	Timeout struct {
+		Write int `long:"write-timeout" description:"Timeout in seconds for write" default:"10"`
+		Read int `long:"read-timeout" description:"Timeout in seconds for read" default:"5"`
+		ReadHeader int `long:"read-header-timeout" description:"Timeout in seconds for read-header" default:"5"`
+		Idle int `long:"idle-timeout" description:"Timeout in seconds for idle" default:"10"`
+		Grace int `long:"grace-timeout" description:"Timeout in seconds before shutting down" default:"15"`
+	}
+	TLS struct {
+		Cert struct {
+			Path string
+		}
+		Key struct {
+			Path string
+		}
+	}
 }
 
-func init() {
+func (cmd *ServeCmd) Execute(args []string) error {
+	app.Env.Ip     = cmd.Public.Ip
+	app.Env.Port   = cmd.Public.Port
+	app.Env.Domain = cmd.Public.Domain
+	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
-	// Here you will define your flags and configuration settings.
+	oas := router.NewOas()
+	oasModel := exporter.ToOasModel(oas)
+	spec, err := exporter.ToYaml(oasModel)
+	if err != nil {
+		log.Error().Err(err)
+	}
+	app.Env.OpenAPI = spec
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
+	chain := middleware.GetChain()
+	route := router.NewRouter(oas)
 
-	serveCmd.Flags().IntP("port", "p", 8080, "The port used for serving the api.")
-	serveCmd.Flags().StringP("ip", "i", "0.0.0.0", "The ip used for serving the api.")
-	serveCmd.Flags().StringP("domain", "d", "localhost", "The domain used to access the api.")
+	srv := &http.Server{
+		Addr: app.Env.Addr,
+		// Good practice to set timeouts to avoid Slowloris attacks.
+		WriteTimeout:      time.Second * time.Duration(cmd.Timeout.Write),
+		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
+		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
+		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
+		Handler:           chain.Then(route), // Pass our instance of gorilla/mux in.
+	}
 
-	serveCmd.Flags().IntP("write-timeout", "", 10, "Timeout in seconds when writing response.")
-	serveCmd.Flags().IntP("read-timeout", "", 10, "Timeout in seconds when reading request headers and body.")
-	serveCmd.Flags().IntP("read-header-timeout", "", 5, "Timeout in seconds when reading request headers.")
-	serveCmd.Flags().IntP("idle-timeout", "", 15, "Timeout in seconds between requests when keep-alive is enabled. If 0 read-timeout is used.")
-	serveCmd.Flags().IntP("graceful-timeout", "", 15, "Timeout in seconds when shutting down.")
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		log.Info().Msg("Listening on " + app.Env.Addr)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Error().Err(err)
+		}
+	}()
 
-	rootCmd.AddCommand(serveCmd)
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Block until we receive our signal.
+	<-c
+
+	// Create a deadline to wait for.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cmd.Timeout.Idle))
+	defer cancel()
+	// Doesn't block if no connections, but will otherwise wait
+	// until the timeout deadline.
+	srv.Shutdown(ctx)
+	// Optionally, you could run srv.Shutdown in a goroutine and block on
+	// <-ctx.Done() if your application should wait for other services
+	// to finalize based on context cancellation.
+	log.Info().Msg("shutting down")
+	os.Exit(0)
+
+	return nil
 }
