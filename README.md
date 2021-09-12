@@ -31,3 +31,9 @@ Using the structs to setup your endpoints will allow for automatic generation of
 
 Documentation can be found at `/docs` and spec at `/docs/openapi.yaml`
 If you get an error try setting `-d localhost`
+
+# TODO / Ideas
+
+- [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
+- [ ] Setup tracing with OpenTelemetry and Jaeger example
+- [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove
