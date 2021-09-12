@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+
+  golang-api-template:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    tty: true
+    environment:
+      - CFG_SERVE_PUBLIC_PORT=8080
+      # - CFG_PATH=/app/config.yml
+    volumes:
+        # Source code
+      - .:/app
+    restart: on-failure
