@@ -93,6 +93,7 @@ func GetHealthSpec() (api.Path) {
 		Responses: []api.Response{{
 			Description: `Testing OK Response`,
 			Code: 200,
+			ContentType: []string{"application/json", "application/yaml"},
 			Schema: GetHealthResponse{},
 		}},
 	}

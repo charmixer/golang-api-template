@@ -30,6 +30,6 @@ func ResponseWriter(next http.Handler) http.Handler {
 	})
 }
 
-func GetChain() alice.Chain {
-	return alice.New(ResponseWriter, Context, Metrics, Logging)
+func GetChain(appName string) alice.Chain {
+	return alice.New(ResponseWriter, Context, Tracing(appName), Metrics, Logging)
 }

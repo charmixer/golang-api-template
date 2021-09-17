@@ -14,10 +14,15 @@ import (
 
 	"github.com/charmixer/oas/exporter"
 
+	"github.com/charmixer/golang-api-template/tracing"
+
 	"github.com/rs/zerolog/log"
 )
 
 type ServeCmd struct {
+	Tracing struct {
+		Url string `long:"trace-provider-url" description:"Trace provider" default:"http://localhost:14268/api/traces"`
+	}
 	Public struct {
 		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
 		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
@@ -46,15 +51,17 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	app.Env.Domain = cmd.Public.Domain
 	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
+	shutdownTracing, err := tracing.SetupTracing(cmd.Tracing.Url, Application.Name, Application.Environment, Application.Version)
+	if err != nil {
+		panic(err)
+	}
+	defer shutdownTracing()
+
 	oas := router.NewOas()
 	oasModel := exporter.ToOasModel(oas)
-	spec, err := exporter.ToYaml(oasModel)
-	if err != nil {
-		log.Error().Err(err)
-	}
-	app.Env.OpenAPI = spec
+	app.Env.OpenAPI = oasModel
 
-	chain := middleware.GetChain()
+	chain := middleware.GetChain(Application.Name)
 	route := router.NewRouter(oas)
 
 	srv := &http.Server{
