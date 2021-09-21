@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/justinas/alice"
-	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -30,28 +28,4 @@ func Logging(next http.Handler) http.Handler {
 			Stringer("url", r.URL).
 			Msg("")
 	})
-}
-
-func Logging2(c alice.Chain) alice.Chain {
-	// Install the logger handler with default output on the console
-	c = c.Append(hlog.NewHandler(log.Logger))
-
-	// Install some provided extra handler to set some request's context fields.
-	// Thanks to that handler, all our logs will come with some prepopulated fields.
-	c = c.Append(hlog.AccessHandler(func(r *http.Request, status, size int, duration time.Duration) {
-		hlog.FromRequest(r).Info().
-			Str("type", "access").
-			Str("request_id", r.Context().Value("req_id").(string)).
-			Str("method", r.Method).
-			Stringer("url", r.URL).
-			Int("status", status).
-			Int("size", size).
-			Dur("duration", duration).
-			Msg("")
-	}))
-	c = c.Append(hlog.RemoteAddrHandler("ip"))
-	c = c.Append(hlog.UserAgentHandler("user_agent"))
-	c = c.Append(hlog.RefererHandler("referer"))
-
-	return c
 }

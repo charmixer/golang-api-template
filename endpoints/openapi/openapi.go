@@ -2,24 +2,26 @@ package openapi
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"github.com/charmixer/oas/api"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+	"github.com/charmixer/oas/api"
+	"github.com/charmixer/oas/exporter"
 	"github.com/charmixer/golang-api-template/app"
+
+	"github.com/rs/zerolog/log"
 )
 
 type GetOpenapiDocsParams struct {
-	Mode string `query:"mode"`
-	Test []map[string]string `query:"test" header:"x-test" path:"test"`
-	XOverrideMethodHeader string `header:"x-override-method-header" oas:"My description goes here"`
-	Debug string `cookie:"debug"`
+	// Mode string `query:"mode"`
+	Format string `query:"format" oas:"Format returned by the endpoint, eg. json"`
+	// XOverrideMethodHeader string `header:"x-override-method-header" oas:"My description goes here"`
+	// Debug string `cookie:"debug"`
 }
 type GetOpenapiDocsRequest struct {
-	Mode string
-	Test []string
-	Test2 []struct{
-		A string
-	}
+
 }
 
 func GetOpenapiSpec() (api.Path) {
@@ -29,19 +31,37 @@ func GetOpenapiSpec() (api.Path) {
 
 		Request: api.Request{
 			Description: ``,
+			Params: GetOpenapiDocsParams{},
 			//Schema: GetHealthRequest{},
 		},
 
 		Responses: []api.Response{{
-			Description: `Returns openapi spec in yaml format`,
+			Description: `Returns openapi spec in given format`,
 			Code: 200,
-			ContentType: api.CONTENT_TYPE_TEXT,
+			ContentType: []string{"application/json", "application/yaml"},
 			//Schema: GetHealthResponse{},
 		}},
 	}
 }
 func GetOpenapi(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(app.Env.OpenAPI))
+  t := r.URL.Query().Get("format")
+
+	var spec string
+	var err error
+
+  if t == "json" {
+		spec, err = exporter.ToJson(app.Env.OpenAPI)
+		if err != nil {
+			log.Error().Err(err)
+		}
+  } else {
+		spec, err = exporter.ToYaml(app.Env.OpenAPI)
+		if err != nil {
+			log.Error().Err(err)
+		}
+	}
+
+	w.Write([]byte(spec))
 }
 
 func GetOpenapiDocsSpec() (api.Path) {
@@ -51,14 +71,14 @@ func GetOpenapiDocsSpec() (api.Path) {
 
 		Request: api.Request{
 			Description: ``,
-			Params: GetOpenapiDocsParams{},
+			//Params: GetOpenapiDocsParams{},
 			//Schema: GetHealthRequest{},
 		},
 
 		Responses: []api.Response{{
 			Description: `Returns openapi spec in yaml format`,
 			Code: 200,
-			ContentType: api.CONTENT_TYPE_HTML,
+			ContentType: []string{api.CONTENT_TYPE_HTML},
 			//Schema: GetHealthResponse{},
 		}},
 	}
@@ -77,7 +97,7 @@ func GetOpenapiDocsSpec() (api.Path) {
 </head>
 <body>
   <rapi-doc
-		spec-url="http://%s:%d/docs/openapi.yaml"
+		spec-url="http://%s:%d/docs/openapi"
 		theme = "dark"
 		layout = "row"
 		render-style = "read"
@@ -89,7 +109,43 @@ func GetOpenapiDocsSpec() (api.Path) {
 </html>
 	`, app.Env.Domain, app.Env.Port)))
 }*/
+
 func GetOpenapiDocs(w http.ResponseWriter, r *http.Request) {
+
+	// HTTP client call to /docs/openapi?format=json
+	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
+
+  ctx := r.Context()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		log.Error().Err(err)
+		panic(err)
+	}
+
+	client := http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
+
+  // Added tracing tile client
+	res, err := client.Do(req) // http.DefaultClient
+	if err != nil {
+		log.Error().Err(err)
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	spec, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Error().Err(err)
+		panic(err)
+	}
+
+  if res.StatusCode != http.StatusOK {
+		log.Error().Msgf("Status not OK, got: '%d'", res.StatusCode)
+		panic(err)
+	}
+
 	w.Write([]byte(fmt.Sprintf(`
 <!doctype html> <!-- Important: must specify -->
 <html>
@@ -97,13 +153,18 @@ func GetOpenapiDocs(w http.ResponseWriter, r *http.Request) {
   <meta charset="utf-8"> <!-- Important: rapi-doc uses utf8 charecters -->
 </head>
 <body>
-  <redoc
-		spec-url="http://%s:%d/docs/openapi.yaml"
-		hide-loading="false"
-		path-in-middle-panel="false"
-	></redoc>
+
 	<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
+	<script>
+	window.onload = function(){
+		Redoc.init(JSON.parse(` + "`%s`" + `), {
+			scrollYOffset: 50
+		}, document.getElementById('redoc-container'))
+	}
+	</script>
+
+	<div id="redoc-container"></div>
 </body>
 </html>
-	`, app.Env.Domain, app.Env.Port)))
+	`, spec)))
 }

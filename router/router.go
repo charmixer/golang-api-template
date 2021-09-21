@@ -23,7 +23,7 @@ func NewOas() (oas api.Api){
 	healthTag := api.Tag{Name: "Health", Description: "Health stuff"}
 
 	oas.NewPath("GET",  "/docs", openapi.GetOpenapiDocs, openapi.GetOpenapiDocsSpec(), []api.Tag{docsTag})
-	oas.NewPath("GET",  "/docs/openapi.yaml", openapi.GetOpenapi, openapi.GetOpenapiSpec(), []api.Tag{docsTag})
+	oas.NewPath("GET",  "/docs/openapi", openapi.GetOpenapi, openapi.GetOpenapiSpec(), []api.Tag{docsTag})
 
 	oas.NewPath("GET",  "/health", health.GetHealth, health.GetHealthSpec(), []api.Tag{healthTag})
 	oas.NewPath("POST", "/health", health.PostHealth, health.PostHealthSpec(), []api.Tag{healthTag})
@@ -32,7 +32,6 @@ func NewOas() (oas api.Api){
 
 	return oas
 }
-
 
 func NewRouter(oas api.Api) (r *mux.Router) {
 	r = mux.NewRouter()
