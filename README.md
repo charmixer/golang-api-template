@@ -35,8 +35,9 @@ If you get an error try setting `-d localhost`
 # TODO / Ideas
 
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
-- [-] Setup tracing with OpenTelemetry and Jaeger example
+- [x] Setup tracing with OpenTelemetry and Jaeger example
 - [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove
 - [ ] Show validation in docs (OpenAPI spec)
 - [ ] README.md update with guides
 - [ ] Setup some sort of error handling
+- [ ] Utils for parsing request body and query
