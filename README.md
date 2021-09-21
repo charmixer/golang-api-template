@@ -32,12 +32,20 @@ Using the structs to setup your endpoints will allow for automatic generation of
 Documentation can be found at `/docs` and spec at `/docs/openapi.yaml`
 If you get an error try setting `-d localhost`
 
-# TODO / Ideas
+# Done / TODOs
 
-- [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
+- [x] Automated documentation of endpoints (OpenAPI)
+- [x] Metrics endpoint with default collectors (Prometheus)
+- [x] Struct-based application config
+  - [x] Config from yaml
+  - [x] Override config with environment
+  - [x] Override environment with flags
+  - [x] Default configuration values
 - [x] Setup tracing with OpenTelemetry and Jaeger example
-- [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove
+- [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
+- [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove/disable
 - [ ] Show validation in docs (OpenAPI spec)
 - [ ] README.md update with guides
 - [ ] Setup some sort of error handling
 - [ ] Utils for parsing request body and query
+- [ ] Health checks with uptime and external deps setup
