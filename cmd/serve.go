@@ -21,7 +21,9 @@ import (
 
 type ServeCmd struct {
 	Tracing struct {
-		Url string `long:"trace-provider-url" description:"Trace provider" default:"http://localhost:14268/api/traces"`
+		Disabled bool `long:"trace-disable" description:"Disable tracing"`
+		Url string `long:"trace-provider-url" description:"Trace provider endpoint to use instead of default"`
+		Provider string `long:"trace-provider" description:"Provider to use for tracing" choice:"jaeger" default:"jaeger"`
 	}
 	Public struct {
 		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
@@ -45,17 +47,47 @@ type ServeCmd struct {
 	}
 }
 
+func (cmd *ServeCmd) initTracing() (func()) {
+	if cmd.Tracing.Disabled || cmd.Tracing.Provider == "" {
+		log.Debug().Msgf("Tracing is disabled")
+		return nil
+	}
+
+	var err error
+
+	exporter := tracing.SetupNilExporter()
+	if cmd.Tracing.Provider == "jaeger" {
+		exporter, err = tracing.SetupJaegerExporter(cmd.Tracing.Url)
+	}
+
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to setup trace exporter")
+		return nil
+	}
+
+	if exporter == nil {
+		log.Debug().Msg("No exporter was setup for tracing")
+		return nil
+	}
+
+	shutdownTracing, err := tracing.SetupTracing(exporter, Application.Name, Application.Environment, Application.Version)
+	if err == nil {
+		return shutdownTracing
+	}
+
+	// Deny by default
+	log.Error().Err(err).Msg("Failed to setup tracer")
+	return nil
+}
+
 func (cmd *ServeCmd) Execute(args []string) error {
 	app.Env.Ip     = cmd.Public.Ip
 	app.Env.Port   = cmd.Public.Port
 	app.Env.Domain = cmd.Public.Domain
 	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
-	shutdownTracing, err := tracing.SetupTracing(cmd.Tracing.Url, Application.Name, Application.Environment, Application.Version)
-	if err != nil {
-		panic(err)
-	}
-	defer shutdownTracing()
+	shutdown := cmd.initTracing()
+	defer shutdown()
 
 	oas := router.NewOas()
 	oasModel := exporter.ToOasModel(oas)

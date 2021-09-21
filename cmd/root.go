@@ -19,7 +19,7 @@ type App struct {
 	Version string `long:"version" description:"Version of the application" default:"0.0.0"`
 
 	Log struct {
-		Verbose  bool `long:"verbose" description:"Verbose logging"`
+		Verbose  bool `long:"verbose" short:"v" description:"Verbose logging"`
 		Format string `long:"log-format" description:"Logging format" choice:"json" choice:"plain"`
 	}
 

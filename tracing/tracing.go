@@ -1,31 +1,57 @@
 package tracing
 
 import (
-	"log"
 	"context"
 	"go.opentelemetry.io/otel"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+
+	"github.com/rs/zerolog/log"
 )
 
-func SetupTracing(url string, service string, environment string, version string) (func(), error) {
-	ctx := context.Background()
+const (
+	DEFAULT_JAEGER_ENDPOINT = "http://localhost:14268/api/traces"
+)
 
-	// Create the Jaeger exporter
-	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
-	if err != nil {
-		return nil, err
+type errorHandler struct {}
+func (e errorHandler) Handle(err error) {
+	log.Error().Err(err).Msg("Tracing failed")
+}
+
+// Nil version of SpanExporter to prevent import of otel in other package for type
+func SetupNilExporter() (sdktrace.SpanExporter) {
+	return nil
+}
+func SetupStdoutExporter() (sdktrace.SpanExporter, error) {
+	return stdouttrace.New()
+}
+func SetupJaegerExporter(url string) (sdktrace.SpanExporter, error) {
+	if url == "" {
+		url = DEFAULT_JAEGER_ENDPOINT
 	}
 
-	tp := tracesdk.NewTracerProvider(
+	log.Info().Msgf("Tracing will be exported to jaeger @ %s", url)
+	return jaeger.New(jaeger.WithCollectorEndpoint(
+		jaeger.WithEndpoint(url)),
+	)
+}
+
+func SetupTracing(exp sdktrace.SpanExporter, service string, environment string, version string) (func(), error) {
+	ctx := context.Background()
+
+	eHandler := errorHandler{}
+	otel.SetErrorHandler(eHandler)
+
+	tp := sdktrace.NewTracerProvider(
 		// Always be sure to batch in production.
-		tracesdk.WithBatcher(exp),
+		sdktrace.WithBatcher(exp),
 		// Record information about this application in an Resource.
-		tracesdk.WithResource(resource.NewWithAttributes(
+		sdktrace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(service),
 			attribute.String("environment", environment),
@@ -41,7 +67,8 @@ func SetupTracing(url string, service string, environment string, version string
 		err := tp.Shutdown(ctx)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Error().Err(err).Msg("Failed to shutdown Trace Provider")
 		}
 	}, nil
 }
+
