@@ -94,7 +94,7 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	app.Env.OpenAPI = oasModel
 
 	chain := middleware.GetChain(Application.Name)
-	route := router.NewRouter(oas)
+	router := router.NewRouter(oas)
 
 	srv := &http.Server{
 		Addr: app.Env.Addr,
@@ -103,7 +103,7 @@ func (cmd *ServeCmd) Execute(args []string) error {
 		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
 		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
 		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
-		Handler:           chain.Then(route), // Pass our instance of gorilla/mux in.
+		Handler:           chain.Then(router), // Pass our instance of gorilla/mux in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

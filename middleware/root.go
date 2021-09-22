@@ -31,5 +31,13 @@ func ResponseWriter(next http.Handler) http.Handler {
 }
 
 func GetChain(appName string) alice.Chain {
-	return alice.New(ResponseWriter, Context, Tracing(appName), Metrics, Logging)
+	return alice.New(
+		ResponseWriter,
+		Context,
+		Tracing(appName),
+		Metrics,
+		Logging,
+		ValidateRequest,
+		ValidateResponse,
+	)
 }
