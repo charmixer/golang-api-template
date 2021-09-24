@@ -5,6 +5,12 @@ import (
 	"github.com/charmixer/oas/api"
 )
 
+var (
+	OPENAPI_TAGS = []api.Tag{
+		{Name: "Health", Description:""},
+	}
+)
+
 type Bla struct {
 	Test1 bool
 	Test2 string
@@ -16,7 +22,7 @@ type GetHealthRequest struct {
 	Alive bool `header:"alive" json:"alive_json" xml:"alive_xml" oas:"Tells if bla"`
 	Ready bool `json:"ready_json" xml:"ready_xml"`
 	Test struct{
-		Bla1 Bla
+		Bla1 Bla `validate:"required,gte=1"`
 		Bla2 []Bla
 		Bla3 [][]Bla
 		Bla4 [][][]Bla
@@ -45,7 +51,7 @@ type GetHealthResponse []struct {
 		MapInt map[int]int
 	}
 }
-
+/*
 type PostHealthRequest []struct {
 	Alive bool `query:"alive" json:"alive_json" xml:"alive_xml" oas:"Tells if bla"`
 	Ready bool `json:"ready_json" xml:"ready_xml"`
@@ -77,17 +83,17 @@ type PostHealthResponse []struct {
 		MapString map[string]string
 		MapInt map[int]int
 	}
-}
+}*/
 
 func GetHealthSpec() (api.Path) {
 	return api.Path{
 		Summary: "Test 2",
 		Description: `Testing 2`,
+		Tags: OPENAPI_TAGS,
 
 		Request: api.Request{
 			Description: `Testing Request`,
-			Params: GetHealthRequest{},
-			//Schema: GetHealthRequest{},
+			Schema: GetHealthRequest{},
 		},
 
 		Responses: []api.Response{{
@@ -102,7 +108,7 @@ func GetHealth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("get /health\n"))
 }
 
-func PostHealthSpec() (api.Path) {
+/*func PostHealthSpec() (api.Path) {
 	return api.Path{
 		Summary: "Test 2",
 		Description: `Testing 2`,
@@ -121,4 +127,65 @@ func PostHealthSpec() (api.Path) {
 }
 func PostHealth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("get /health\n"))
+}*/
+
+type PostHealthRequest struct {
+	Alive bool `query:"alive" json:"alive_json" xml:"alive_xml" oas:"Tells if bla"`
+	Ready bool `json:"ready_json" xml:"ready_xml"`
 }
+type PostHealthResponse []struct {
+	Alive bool `json:"alive_json" xml:"alive_xml" desc:"Tells if bla"`
+	Ready bool `json:"ready_json" xml:"ready_xml"`
+}
+
+func (req PostHealthRequest) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("get /health\n"))
+}
+func (req PostHealthRequest) Specification() (api.Path) {
+	return api.Path{
+		Summary: "Test 2",
+		Description: `Testing 2`,
+		Tags: OPENAPI_TAGS,
+
+		Request: api.Request{
+			Description: `Testing Request`,
+			Schema: PostHealthRequest{},
+		},
+
+		Responses: []api.Response{{
+			Description: `Testing OK Response`,
+			Code: 200,
+			Schema: PostHealthResponse{},
+		}},
+	}
+}
+
+
+
+/*
+type PostHealth struct {
+	RequestBody PostHealthRequest
+	// RequestParams ..
+	ResponseBody PostHealthResponse
+}
+func (ep PostHealth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("get /health\n"))
+}
+func (ep PostHealth) Specification() (api.Path) {
+	return api.Path{
+		Summary: "Test 2",
+		Description: `Testing 2`,
+
+		Request: api.Request{
+			Description: `Testing Request`,
+			Schema: ep.RequestBody,
+		},
+
+		Responses: []api.Response{{
+			Description: `Testing OK Response`,
+			Code: 200,
+			Schema: ep.ResponseBody,
+		}},
+	}
+}
+*/

@@ -17,9 +17,9 @@ func (v *OasCmd) Execute(args []string) error {
 	fmt.Printf("%#v\n", v)
 	fmt.Printf("%#v\n", Application)
 
-	oas := router.NewOas()
+	router := router.NewRouter()
 
-	oasModel := exporter.ToOasModel(oas)
+	oasModel := exporter.ToOasModel(router.OpenAPI)
 	oasYaml, err := exporter.ToYaml(oasModel)
 
 	if err != nil {
