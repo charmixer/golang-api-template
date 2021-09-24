@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/charmixer/golang-api-template/middleware"
 	"github.com/charmixer/golang-api-template/router"
 	"github.com/charmixer/golang-api-template/app"
 
@@ -89,8 +88,8 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-  router := router.NewRouter()
-	chain := middleware.GetChain(/*router,*/ Application.Name)
+  router := router.NewRouter(Application.Name)
+	//chain := middleware.GetChain(/*router,*/ Application.Name)
 
 	oasModel := exporter.ToOasModel(router.OpenAPI)
 	app.Env.OpenAPI = oasModel
@@ -108,7 +107,7 @@ func (cmd *ServeCmd) Execute(args []string) error {
 		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
 		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
 		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
-		Handler:           chain.Then(router.Mux), // Pass our instance of gorilla/mux in.
+		Handler:           router.Handle(), // chain.Then(router), // Pass our instance of gorilla/mux in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

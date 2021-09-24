@@ -21,19 +21,21 @@ var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Help: "Duration of HTTP requests.",
 }, []string{"path", "method"})
 
-func Metrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func WithMetrics() (MiddlewareHandler) {
+  return func(next http.Handler) http.Handler {
+  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+  		ctx := r.Context()
 
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(r.URL.Path, r.Method))
+  		timer := prometheus.NewTimer(httpDuration.WithLabelValues(r.URL.Path, r.Method))
 
-		wrapped := w.(*responseWriter)
-		next.ServeHTTP(wrapped, r.WithContext(ctx))
+  		wrapped := w.(*responseWriter)
+  		next.ServeHTTP(wrapped, r.WithContext(ctx))
 
-		totalRequests.WithLabelValues(r.URL.Path, r.Method, strconv.Itoa(wrapped.Status)).Inc()
+  		totalRequests.WithLabelValues(r.URL.Path, r.Method, strconv.Itoa(wrapped.Status)).Inc()
 
-		timer.ObserveDuration()
-	})
+  		timer.ObserveDuration()
+  	})
+  }
 }
 
 func init() {

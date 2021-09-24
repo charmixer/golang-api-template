@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"net/http"
-
-	"github.com/justinas/alice"
 )
 
 // responseWriter is a minimal wrapper for http.ResponseWriter that allows the
@@ -23,21 +21,25 @@ func wrapResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{ResponseWriter: w, Status: http.StatusOK}
 }
 
-func ResponseWriter(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		wrapped := wrapResponseWriter(w)
-		next.ServeHTTP(wrapped, r)
-	})
+func WithResponseWriter() (MiddlewareHandler) {
+  return func(next http.Handler) http.Handler {
+  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+  		wrapped := wrapResponseWriter(w)
+  		next.ServeHTTP(wrapped, r)
+  	})
+  }
 }
 
-func GetChain(appName string) alice.Chain {
-	return alice.New(
-		ResponseWriter,
-		Context,
-		Tracing(appName),
-		Metrics,
-		Logging,
-		ValidateRequest,
-		ValidateResponse,
-	)
+type MiddlewareHandler func(http.Handler) http.Handler
+func New(h http.Handler, handlers ...MiddlewareHandler ) http.Handler {
+
+	if h == nil {
+		h = http.DefaultServeMux
+	}
+
+	for i := range handlers {
+		h = handlers[len(handlers)-1-i](h)
+	}
+
+	return h
 }
