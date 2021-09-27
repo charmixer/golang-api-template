@@ -3,9 +3,11 @@ package router
 import (
 	"net/http"
 
-	"github.com/charmixer/golang-api-template/endpoints/metrics"
-	"github.com/charmixer/golang-api-template/endpoints/health"
-	"github.com/charmixer/golang-api-template/endpoints/openapi"
+	"github.com/charmixer/golang-api-template/endpoint"
+
+	"github.com/charmixer/golang-api-template/endpoint/metrics"
+	"github.com/charmixer/golang-api-template/endpoint/health"
+	"github.com/charmixer/golang-api-template/endpoint/docs"
 
 	"github.com/charmixer/golang-api-template/middleware"
 
@@ -14,10 +16,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type Route interface {
+/*type Route interface {
 	http.Handler
 	Specification() api.Path
-}
+}*/
 
 type Router struct {
 	httprouter.Router
@@ -25,9 +27,11 @@ type Router struct {
 	Middleware []middleware.MiddlewareHandler
 }
 
-func (r *Router) NewRoute(method string, uri string, route Route, handlers ...middleware.MiddlewareHandler) {
-	r.OpenAPI.NewEndpoint(method, uri, route.Specification())
-	r.Handler(method, uri, middleware.New(route, handlers...))
+func (r *Router) NewRoute(method string, uri string, ep endpoint.EndpointHandler, handlers ...middleware.MiddlewareHandler) {
+	r.OpenAPI.NewEndpoint(method, uri, ep.Specification())
+
+	middlewareHandlers := append(handlers, ep.Middleware()...)
+	r.Handler(method, uri, middleware.New(ep.(http.Handler), middlewareHandlers...))
 }
 func (r *Router) Use(h ...middleware.MiddlewareHandler) {
 	r.Middleware = append(r.Middleware, h...)
@@ -36,41 +40,33 @@ func (r *Router) Handle() http.Handler {
 	return middleware.New(r, r.Middleware...)
 }
 
-func NewRouter(appName string) (*Router) {
+func NewRouter(name string, description string, version string) (*Router) {
 	r := &Router{
 		OpenAPI: api.Api{
-			Title: "Golang api template",
-			Description: `Gives a simple blueprint for creating new api's`,
-			Version: "0.0.0",
+			Title: name,
+			Description: description,
+			Version: version,
 		},
 	}
 
 	// Ordering matters
 	r.Use(
-		middleware.WithResponseWriter(),
+		middleware.WithInitialization(),
 		middleware.WithContext(),
-		middleware.WithTracing(appName),
+		middleware.WithTracing(name),
 		middleware.WithMetrics(),
 		middleware.WithLogging(),
+
+		//middleware.WithAuthentication(),
 	)
 
-  /*healthEndpoint := health.HealthEndpoint{
-		Method: "GET",
-		Path: "/health",
+	r.NewRoute("GET", "/health", health.NewGetHealthEndpoint())
 
-	}
-	healthRequest := health.GetHealthRequest{}
-	r.NewRoute("GET", "/health", &healthEndpoint,
-		middleware.WithInputValidation(healthEndpoint),
-		middleware.WithOutputValidation(healthEndpoint),
-	)*/
+	r.NewRoute("GET", "/docs", docs.NewGetDocsEndpoint())
+	r.NewRoute("GET", "/docs/openapi", docs.NewGetOpenapiEndpoint())
+	r.NewRoute("POST", "/docs/openapi", docs.NewGetOpenapiEndpoint())
 
-	r.NewRoute("GET", "/health", health.GetHealthRequest{})
-
-	r.NewRoute("GET", "/docs", openapi.GetDocsRequest{})
-	r.NewRoute("GET", "/docs/openapi", openapi.GetOpenapiRequest{})
-
-	r.NewRoute("GET", "/metrics", metrics.GetMetricsRequest{})
+	r.NewRoute("GET", "/metrics", metrics.NewGetMetricsEndpoint())
 
 	return r
 }

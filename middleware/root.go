@@ -21,7 +21,7 @@ func wrapResponseWriter(w http.ResponseWriter) *responseWriter {
 	return &responseWriter{ResponseWriter: w, Status: http.StatusOK}
 }
 
-func WithResponseWriter() (MiddlewareHandler) {
+func WithInitialization() (MiddlewareHandler) {
   return func(next http.Handler) http.Handler {
   	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
   		wrapped := wrapResponseWriter(w)

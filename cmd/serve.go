@@ -88,7 +88,7 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-  router := router.NewRouter(Application.Name)
+  router := router.NewRouter(Application.Name, Application.Description, Application.Version)
 	//chain := middleware.GetChain(/*router,*/ Application.Name)
 
 	oasModel := exporter.ToOasModel(router.OpenAPI)
