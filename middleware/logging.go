@@ -1,8 +1,10 @@
 package middleware
 
 import (
-	"net/http"
 	"time"
+	"net/http"
+
+	"go.opentelemetry.io/otel"
 
 	"github.com/rs/zerolog/log"
 )
@@ -10,11 +12,19 @@ import (
 func WithLogging() (MiddlewareHandler) {
   return func(next http.Handler) http.Handler {
   	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-  		start := time.Now()
+			ctx := r.Context()
+			tr := otel.Tracer("request")
+			ctx, span := tr.Start(ctx, "middleware.logging")
+			defer span.End()
+
+			start := time.Now()
 
   		wrapped := w.(*responseWriter)
 
-  		next.ServeHTTP(wrapped, r)
+  		next.ServeHTTP(wrapped, r.WithContext(ctx))
+
+			ctx, span = tr.Start(ctx, "write request to log")
+			defer span.End()
 
   		log.Info().
   			Str("type", "access").

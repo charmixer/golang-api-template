@@ -1,6 +1,7 @@
 package docs
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/charmixer/oas/api"
@@ -10,6 +11,7 @@ import (
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/middleware"
 
+	"go.opentelemetry.io/otel"
 
 	_ "github.com/rs/zerolog/log"
 )
@@ -21,15 +23,11 @@ var (
 )
 
 type Test struct {
-	Something string `oas-desc:"Format returned by the endpoint, eg. json"`
+	Testfield string `validate:"iscolor"`
 }
-
 type GetOpenapiRequest struct {
-	Mode string `oas-query:"mode"`
-	Format string `oas-query:"format" oas-desc:"Format returned by the endpoint, eg. json"`
-	XOverrideMethodHeader string `oas-header:"x-override-method-header" oas-desc:"My description goes here"`
-	Debug string `oas-cookie:"debug"`
-	Test Test `oas-query:"test"`
+	Format string `json:"format" oas-query:"format" validate:"iscolor" oas-desc:"Format returned by the endpoint, eg. json"`
+	Test Test `oas-query:"fordasat" validate:"iscolor" oas-desc:"Format returned by the endpoint, eg. json"`
 }
 
 // https://golang.org/doc/effective_go#embedding
@@ -37,16 +35,24 @@ type GetOpenapiEndpoint struct {
 	endpoint.Endpoint
 	Request GetOpenapiRequest
 	Response exporter.Openapi
+	responseType string
 }
 func (ep *GetOpenapiEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	tr := otel.Tracer("request")
+	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
+	defer span.End()
+
 	t := r.URL.Query().Get("format")
 
 	ep.Response = app.Env.OpenAPI
 
   if t == "json" {
 		w.Header().Set("Content-Type", "application/json")
+		ep.responseType = "json"
   } else {
-		w.Header().Set("Content-Type", "application/x-yaml")
+		w.Header().Set("Content-Type", "text/plain; application/yaml; charset=utf-8")
+		ep.responseType = "yaml"
 	}
 }
 
@@ -67,14 +73,21 @@ func NewGetOpenapiEndpoint() (endpoint.EndpointHandler) {
 			Responses: []api.Response{{
 				Description: `Returns openapi spec in given format`,
 				Code: 200,
-				ContentType: []string{"application/json", "application/x-yaml"},
+				ContentType: []string{"application/json", "application/yaml"},
 				Schema: exporter.Openapi{},
-			}},
+			},/*{
+				Description: `error ...`,
+				Code: 400,
+				ContentType: []string{"application/json"},
+				Schema: GetOpenapiEndpoint.BadRequest{},
+			}*/},
 		}),
 
 		endpoint.WithMiddleware(
 			middleware.WithRequestParser(&ep.Request),
-			middleware.WithResponseWriter(&ep.Response),
+			middleware.WithRequestValidation(&ep.Request/*, &ep.BadRequest*/),
+
+			middleware.WithResponseWriter(&ep.responseType, &ep.Response),
 		),
 	)
 

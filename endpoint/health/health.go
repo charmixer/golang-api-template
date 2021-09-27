@@ -1,11 +1,14 @@
 package health
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/charmixer/oas/api"
 
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/middleware"
+
+	"go.opentelemetry.io/otel"
 )
 
 var (
@@ -16,8 +19,8 @@ var (
 
 type GetHealthRequest struct {}
 type GetHealthResponse struct {
-	Alive bool `json:"alive_json" xml:"alive_xml" desc:"Tells if bla"`
-	Ready bool `json:"ready_json" xml:"ready_xml"`
+	Alive bool `json:"alive_json" oas-desc:"Tells if bla"`
+	Ready bool `json:"ready_json"`
 }
 
 // https://golang.org/doc/effective_go#embedding
@@ -27,6 +30,11 @@ type GetHealthEndpoint struct {
 	Response GetHealthResponse
 }
 func (ep *GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	tr := otel.Tracer("request")
+	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
+	defer span.End()
+
 	w.Header().Set("Content-Type", "application/json")
 
 	ep.Response = GetHealthResponse{
@@ -60,7 +68,7 @@ func NewGetHealthEndpoint() (endpoint.EndpointHandler) {
 			middleware.WithRequestValidation(&ep.Request),
 
 			middleware.WithResponseValidation(&ep.Response),
-			middleware.WithResponseWriter(&ep.Response),
+			middleware.WithJsonResponseWriter(&ep.Response),
 		),
 
 	)
