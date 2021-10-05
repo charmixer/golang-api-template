@@ -17,12 +17,6 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
-// https://medium.com/tunaiku-tech/go-validator-v10-c7a4f1be37df
-// https://hackernoon.com/golang-declarative-validation-made-similar-to-ruby-on-rails-1d2z34c0
-
-//https://pkg.go.dev/github.com/go-playground/validator/v10
-// https://github.com/go-playground/validator
-
 var (
 	validate *validator.Validate
 	locale string
@@ -81,7 +75,6 @@ func WithRequestValidation(request interface{}) MiddlewareHandler{
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			ctx := r.Context()
-
 			tr := otel.Tracer("request")
 			ctx, span := tr.Start(ctx, "request-validation")
 			defer span.End()
@@ -117,6 +110,7 @@ func WithRequestValidation(request interface{}) MiddlewareHandler{
 				panic(err) // TODO FIXME
 			}
 			w.Write(d)
+
 		})
 	}
 }
@@ -124,7 +118,48 @@ func WithRequestValidation(request interface{}) MiddlewareHandler{
 func WithResponseValidation(response interface{}) MiddlewareHandler {
 	return func (next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r)
+
+		// TODO
+
+		/*
+
+			ctx := r.Context()
+			tr := otel.Tracer("request")
+			ctx, span := tr.Start(ctx, "response-validation")
+			defer span.End()
+
+	    err := validate.Struct(response)
+			if err == nil {
+				// No validation error, continue chain
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			response := HttpClientErrorResponse{
+				StatusCode: http.StatusBadRequest,
+				Method: r.Method,
+				Url: fmt.Sprintf("%s%s", r.Host, r.URL.RequestURI()),
+				// Body: ...
+			}
+
+			for _, verr := range err.(validator.ValidationErrors) {
+				e := FieldError{
+					Path: verr.Field(),
+					Err: verr.Translate(trans),
+				}
+
+				response.Errors = append(response.Errors, e)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(response.StatusCode)
+
+			d, err := json.Marshal(response)
+			if err != nil {
+				panic(err) // TODO FIXME
+			}
+			w.Write(d)
+		*/
 		})
 	}
 }
