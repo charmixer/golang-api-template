@@ -12,7 +12,7 @@ import (
 const requestIdKey = attribute.Key("request_id")
 const spanKindKey = attribute.Key("span.kind")
 
-func Tracing(appName string) (func(next http.Handler) http.Handler) {
+func WithTracing(appName string) (MiddlewareHandler) {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()

@@ -14,7 +14,8 @@ import (
 )
 
 type App struct {
-	Name string `long:"name" description:"Name of application" default:"golang-api-template"`
+	Name string `long:"app-name" description:"Name of application" default:"golang-api-template"`
+	Description string `long:"app-description" description:"Description of application" default:"Gives a simple blueprint for creating new api's"`
 	Environment string `long:"environment" description:"Environment the application is running in, eg. prod or dev" default:"dev"`
 	Version string `long:"version" description:"Version of the application" default:"0.0.0"`
 

@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/charmixer/golang-api-template/middleware"
 	"github.com/charmixer/golang-api-template/router"
 	"github.com/charmixer/golang-api-template/app"
 
@@ -89,13 +88,18 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-	oas := router.NewOas()
-	oasModel := exporter.ToOasModel(oas)
+  router := router.NewRouter(Application.Name, Application.Description, Application.Version)
+	//chain := middleware.GetChain(/*router,*/ Application.Name)
+
+	oasModel := exporter.ToOasModel(router.OpenAPI)
 	app.Env.OpenAPI = oasModel
 
-	chain := middleware.GetChain(Application.Name)
-	route := router.NewRouter(oas)
+// 1. instance ServeCmd
+// 2. chain + router
+// 3. server handler er chain så router
 
+// 3x. server handler er (router resolve, chain, router(chain resolved)
+//https://github.com/julienschmidt/httprouter
 	srv := &http.Server{
 		Addr: app.Env.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
@@ -103,7 +107,7 @@ func (cmd *ServeCmd) Execute(args []string) error {
 		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
 		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
 		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
-		Handler:           chain.Then(route), // Pass our instance of gorilla/mux in.
+		Handler:           router.Handle(), // chain.Then(router), // Pass our instance of gorilla/mux in.
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

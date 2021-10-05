@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.opentelemetry.io/otel"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -21,19 +23,28 @@ var httpDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
 	Help: "Duration of HTTP requests.",
 }, []string{"path", "method"})
 
-func Metrics(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func WithMetrics() (MiddlewareHandler) {
+  return func(next http.Handler) http.Handler {
+  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+  		ctx := r.Context()
 
-		timer := prometheus.NewTimer(httpDuration.WithLabelValues(r.URL.Path, r.Method))
+			tr := otel.Tracer("request")
+			ctx, span := tr.Start(ctx, "middleware.metrics")
+			defer span.End()
 
-		wrapped := w.(*responseWriter)
-		next.ServeHTTP(wrapped, r.WithContext(ctx))
+  		timer := prometheus.NewTimer(httpDuration.WithLabelValues(r.URL.Path, r.Method))
 
-		totalRequests.WithLabelValues(r.URL.Path, r.Method, strconv.Itoa(wrapped.Status)).Inc()
+  		wrapped := w.(*responseWriter)
+  		next.ServeHTTP(wrapped, r.WithContext(ctx))
 
-		timer.ObserveDuration()
-	})
+			ctx, span = tr.Start(ctx, "record metrics")
+			defer span.End()
+
+  		totalRequests.WithLabelValues(r.URL.Path, r.Method, strconv.Itoa(wrapped.Status)).Inc()
+
+  		timer.ObserveDuration()
+  	})
+  }
 }
 
 func init() {

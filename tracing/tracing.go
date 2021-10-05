@@ -6,7 +6,6 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -26,9 +25,6 @@ func (e errorHandler) Handle(err error) {
 // Nil version of SpanExporter to prevent import of otel in other package for type
 func SetupNilExporter() (sdktrace.SpanExporter) {
 	return nil
-}
-func SetupStdoutExporter() (sdktrace.SpanExporter, error) {
-	return stdouttrace.New()
 }
 func SetupJaegerExporter(url string) (sdktrace.SpanExporter, error) {
 	if url == "" {
