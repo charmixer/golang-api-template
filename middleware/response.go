@@ -10,7 +10,16 @@ import (
   "go.opentelemetry.io/otel"
 )
 
-func WithJsonResponseWriter(response interface{}) MiddlewareHandler {
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func WithJsonResponseWriter(response interface{}, status ...int) MiddlewareHandler {
 	return func (next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
       ctx := r.Context()
@@ -20,19 +29,22 @@ func WithJsonResponseWriter(response interface{}) MiddlewareHandler {
 
     	next.ServeHTTP(w, r)
 
-    	ctx, span = tr.Start(ctx, "write response")
-    	defer span.End()
+			// Only write if written statuscode is in given list
+			if contains(status, w.(*responseWriter).Status) {
+				ctx, span = tr.Start(ctx, "write response")
+				defer span.End()
 
-      d, err := json.Marshal(response)
-			if err != nil {
-				panic(err) // TODO FIXME
+				d, err := json.Marshal(response)
+				if err != nil {
+					panic(err) // TODO FIXME
+				}
+				w.Write(d)
 			}
-			w.Write(d)
 		})
 	}
 }
 
-func WithYamlResponseWriter(response interface{}) MiddlewareHandler {
+func WithYamlResponseWriter(response interface{}, status ...int) MiddlewareHandler {
 	return func (next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
       ctx := r.Context()
@@ -42,19 +54,22 @@ func WithYamlResponseWriter(response interface{}) MiddlewareHandler {
 
     	next.ServeHTTP(w, r)
 
-    	ctx, span = tr.Start(ctx, "write response")
-    	defer span.End()
+			// Only write if written statuscode is in given list
+			if contains(status, w.(*responseWriter).Status) {
+				ctx, span = tr.Start(ctx, "write response")
+				defer span.End()
 
-      d, err := yaml.Marshal(response)
-      if err != nil {
-        panic(err) // TODO FIXME
+				d, err := yaml.Marshal(response)
+				if err != nil {
+					panic(err) // TODO FIXME
+				}
+				w.Write(d)
       }
-      w.Write(d)
 		})
 	}
 }
 
-func WithResponseWriter(tp *string, response interface{}) MiddlewareHandler {
+func WithResponseWriter(tp *string, response interface{}, status ...int) MiddlewareHandler {
 	return func (next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
       ctx := r.Context()
@@ -64,26 +79,29 @@ func WithResponseWriter(tp *string, response interface{}) MiddlewareHandler {
 
     	next.ServeHTTP(w, r)
 
-    	ctx, span = tr.Start(ctx, "write response")
-    	defer span.End()
+			// Only write if written statuscode is in given list
+			if contains(status, w.(*responseWriter).Status) {
+				ctx, span = tr.Start(ctx, "write response")
+				defer span.End()
 
-			switch (*tp) {
-			case "json":
-        d, err := json.Marshal(response)
-        if err != nil {
-          panic(err) // TODO FIXME
-        }
-        w.Write(d)
-				break;
-			case "yaml":
-        d, err := yaml.Marshal(response)
-        if err != nil {
-          panic(err) // TODO FIXME
-        }
-        w.Write(d)
-				break;
-			default:
-				panic(fmt.Sprintf("Unknown response type given, %s", tp))
+				switch (*tp) {
+				case "json":
+					d, err := json.Marshal(response)
+					if err != nil {
+						panic(err) // TODO FIXME
+					}
+					w.Write(d)
+					break;
+				case "yaml":
+					d, err := yaml.Marshal(response)
+					if err != nil {
+						panic(err) // TODO FIXME
+					}
+					w.Write(d)
+					break;
+				default:
+					panic(fmt.Sprintf("Unknown response type given, %s", *tp))
+				}
 			}
 
 		})

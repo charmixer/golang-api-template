@@ -14,7 +14,6 @@ WORKDIR /app
 COPY . .
 
 # Setup go mod
-RUN [ ! -f ./go.mod ] && go mod init main
 RUN go mod tidy
 
 # Development requires fresh

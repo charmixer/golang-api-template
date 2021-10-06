@@ -11,7 +11,7 @@ import (
 	"github.com/charmixer/golang-api-template/app"
 
 	"github.com/charmixer/golang-api-template/endpoint"
-  "github.com/charmixer/golang-api-template/middleware"
+  // "github.com/charmixer/golang-api-template/middleware"
 
 	"github.com/rs/zerolog/log"
 )
@@ -144,7 +144,7 @@ func NewGetDocsEndpoint() (endpoint.EndpointHandler) {
 		}),
 
     endpoint.WithMiddleware(
-			middleware.WithRequestParser(&ep.Request),
+
 		),
 	)
 

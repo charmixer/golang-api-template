@@ -22,12 +22,8 @@ var (
 	}
 )
 
-type Test struct {
-	Testfield string `validate:"iscolor"`
-}
 type GetOpenapiRequest struct {
-	Format string `json:"format" oas-query:"format" validate:"iscolor" oas-desc:"Format returned by the endpoint, eg. json"`
-	Test Test `oas-query:"fordasat" validate:"iscolor" oas-desc:"Format returned by the endpoint, eg. json"`
+	Format string `json:"format" oas-query:"format" oas-desc:"Format returned by the endpoint, eg. json"`
 }
 
 // https://golang.org/doc/effective_go#embedding
@@ -84,9 +80,6 @@ func NewGetOpenapiEndpoint() (endpoint.EndpointHandler) {
 		}),
 
 		endpoint.WithMiddleware(
-			middleware.WithRequestParser(&ep.Request),
-			middleware.WithRequestValidation(&ep.Request/*, &ep.BadRequest*/),
-
 			middleware.WithResponseWriter(&ep.responseType, &ep.Response),
 		),
 	)

@@ -13,10 +13,6 @@ type OasCmd struct {
 }
 
 func (v *OasCmd) Execute(args []string) error {
-	fmt.Println("oascmd")
-	fmt.Printf("%#v\n", v)
-	fmt.Printf("%#v\n", Application)
-
 	router := router.NewRouter(Application.Name, Application.Description, Application.Version)
 
 	oasModel := exporter.ToOasModel(router.OpenAPI)

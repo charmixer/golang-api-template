@@ -64,9 +64,6 @@ func NewGetHealthEndpoint() (endpoint.EndpointHandler) {
 		}),
 
 		endpoint.WithMiddleware(
-			middleware.WithRequestParser(&ep.Request),
-			middleware.WithRequestValidation(&ep.Request),
-
 			middleware.WithResponseValidation(&ep.Response),
 			middleware.WithJsonResponseWriter(&ep.Response),
 		),
