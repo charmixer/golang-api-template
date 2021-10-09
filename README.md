@@ -44,6 +44,8 @@ If you get an error try setting `-d localhost`
 - [x] Setup tracing with OpenTelemetry and Jaeger example
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
 - [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove/disable
+  - [x] Input validation
+  - [ ] Output validation
 - [ ] Show validation in docs (OpenAPI spec)
 - [ ] README.md update with guides
 - [ ] Setup some sort of error handling
