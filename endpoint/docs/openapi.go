@@ -80,9 +80,6 @@ func NewGetOpenapiEndpoint() (endpoint.EndpointHandler) {
 		}),
 
 		endpoint.WithMiddleware(
-			middleware.WithRequestParser(&ep.Request),
-			middleware.WithRequestValidation(&ep.Request/*, &ep.BadRequest*/),
-
 			middleware.WithResponseWriter(&ep.responseType, &ep.Response),
 		),
 	)

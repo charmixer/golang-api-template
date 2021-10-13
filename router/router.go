@@ -14,12 +14,9 @@ import (
 	"github.com/charmixer/oas/api"
 
 	"github.com/julienschmidt/httprouter"
-)
 
-/*type Route interface {
-	http.Handler
-	Specification() api.Path
-}*/
+	"github.com/rs/zerolog/log"
+)
 
 type Router struct {
 	httprouter.Router
@@ -28,7 +25,12 @@ type Router struct {
 }
 
 func (r *Router) NewRoute(method string, uri string, ep endpoint.EndpointHandler, handlers ...middleware.MiddlewareHandler) {
-	r.OpenAPI.NewEndpoint(method, uri, ep.Specification())
+	log.Debug().
+		Str("method", method).
+		Str("endpoint", uri).
+		Msg("Setting up endpoint")
+
+ 	r.OpenAPI.NewEndpoint(method, uri, ep.Specification())
 
 	middlewareHandlers := append(handlers, ep.Middleware()...)
 	r.Handler(method, uri, middleware.New(ep.(http.Handler), middlewareHandlers...))

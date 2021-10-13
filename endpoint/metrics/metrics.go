@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/charmixer/golang-api-template/endpoint"
-	"github.com/charmixer/golang-api-template/middleware"
+	// "github.com/charmixer/golang-api-template/middleware"
 
 	"github.com/charmixer/oas/api"
 )
@@ -54,7 +54,7 @@ func NewGetMetricsEndpoint() (endpoint.EndpointHandler) {
 		}),
 
 		endpoint.WithMiddleware(
-			middleware.WithRequestParser(&ep.Request),
+
 		),
 	)
 

@@ -15,6 +15,8 @@ import (
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
+
+	ep_errors "github.com/charmixer/golang-api-template/endpoint/errors"
 )
 
 var (
@@ -46,30 +48,6 @@ func init() {
 	en_translations.RegisterDefaultTranslations(validate, trans)
 }
 
-/*
-Codes we care about
-
-200 OK,
-400 BadRequest
-401 Unauthorized - Authentication denied,
-403 Forbidden - Authorization denined,
-404 Not Found
-500 Internal Server Error,
-503 Service Unavailable
-*/
-
-type FieldError struct {
-	Path string `json:"path"`
-	Err string `json:"err"`
-}
-
-type HttpClientErrorResponse struct {
-	StatusCode int `json:"status_code"`
-	Method string `json:"method"`
-	Url string `json:"url"`
-	Errors []FieldError `json:"errors"`
-}
-
 func WithRequestValidation(request interface{}) MiddlewareHandler{
 	return func (next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +64,7 @@ func WithRequestValidation(request interface{}) MiddlewareHandler{
 				return
 			}
 
-			response := HttpClientErrorResponse{
+			response := ep_errors.HttpClientErrorResponse{
 				StatusCode: http.StatusBadRequest,
 				Method: r.Method,
 				Url: fmt.Sprintf("%s%s", r.Host, r.URL.RequestURI()),
@@ -94,7 +72,7 @@ func WithRequestValidation(request interface{}) MiddlewareHandler{
 			}
 
 			for _, verr := range err.(validator.ValidationErrors) {
-				e := FieldError{
+				e := ep_errors.FieldError{
 					Path: verr.Field(),
 					Err: verr.Translate(trans),
 				}
@@ -160,24 +138,6 @@ func WithResponseValidation(response interface{}) MiddlewareHandler {
 			}
 			w.Write(d)
 		*/
-		})
-	}
-}
-
-
-
-
-
-// TODO move this to better place
-func WithRequestParser(request interface{}) MiddlewareHandler {
-	return func (next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			tr := otel.Tracer("request")
-			ctx, span := tr.Start(ctx, "middleware.request-parser")
-			defer span.End()
-
-			next.ServeHTTP(w, r)
 		})
 	}
 }
