@@ -23,10 +23,8 @@ type GetMetricsResponse struct {}
 // https://golang.org/doc/effective_go#embedding
 type GetMetricsEndpoint struct {
 	endpoint.Endpoint
-	Request GetMetricsRequest
-	Response GetMetricsResponse
 }
-func (ep *GetMetricsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ep GetMetricsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t := promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).(http.HandlerFunc)
 	t.ServeHTTP(w, r)
 }
@@ -52,12 +50,8 @@ func NewGetMetricsEndpoint() (endpoint.EndpointHandler) {
 				//Schema: GetMetricsResponse{},
 			}},
 		}),
-
-		endpoint.WithMiddleware(
-
-		),
 	)
 
 	// Must be pointer to allow ServeHTTP method to be used with *Endpoint
-	return &ep
+	return ep
 }

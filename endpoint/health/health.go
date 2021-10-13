@@ -6,7 +6,7 @@ import (
 	"github.com/charmixer/oas/api"
 
 	"github.com/charmixer/golang-api-template/endpoint"
-	"github.com/charmixer/golang-api-template/middleware"
+	"github.com/charmixer/golang-api-template/endpoint/problem"
 
 	"go.opentelemetry.io/otel"
 )
@@ -19,26 +19,46 @@ var (
 
 type GetHealthRequest struct {}
 type GetHealthResponse struct {
-	Alive bool `json:"alive_json" oas-desc:"Tells if bla"`
-	Ready bool `json:"ready_json"`
+	Alive bool `json:"alive_json" oas-desc:"Tells if the service is alive (ping)"`
+	Ready bool `json:"ready_json" oas-desc:"Tells if the service is ready to accept requests"`
 }
 
 // https://golang.org/doc/effective_go#embedding
 type GetHealthEndpoint struct {
 	endpoint.Endpoint
-	Request GetHealthRequest
-	Response GetHealthResponse
 }
-func (ep *GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tr := otel.Tracer("request")
 	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
 	defer span.End()
 
+	request := GetHealthRequest{}
+	if err := endpoint.WithRequestQueryParser(ctx, r, &request); err != nil {
+		problem.MustWrite(w, err)
+		return
+	}
+
+	if err := endpoint.WithRequestValidation(ctx, &request); err != nil {
+		problem.MustWrite(w, err)
+		return
+	}
+
+	response := GetHealthResponse{
+		Alive: true,
+		Ready: true,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	ep.Response = GetHealthResponse{
-		Alive: true,
+	if err := endpoint.WithResponseValidation(ctx, response); err != nil {
+		problem.MustWrite(w, err)
+		return
+	}
+
+	if err := endpoint.WithJsonResponseWriter(ctx, w, response); err != nil {
+		problem.MustWrite(w, err)
+		return
 	}
 }
 
@@ -47,29 +67,26 @@ func NewGetHealthEndpoint() (endpoint.EndpointHandler) {
 
 	ep.Setup(
 		endpoint.WithSpecification(api.Path{
-			Summary: "Test 2",
-			Description: `Testing 2`,
+			Summary: "Get health information about the service",
+			Description: ``,
 			Tags: OPENAPI_TAGS,
 
 			Request: api.Request{
-				Description: `Testing Request`,
+				Description: ``,
 				Schema: GetHealthRequest{},
 			},
 
 			Responses: []api.Response{{
-				Description: `Testing OK Response`,
-				Code: 200,
+				Description: http.StatusText(http.StatusOK),
+				Code: http.StatusOK,
 				Schema: GetHealthResponse{},
-			}},
+			},/*{
+				Description: http.StatusText(http.StatusBadRequest),
+				Code: http.StatusBadRequest,
+				Schema: problem.ProblemDetails{}, // TODO fix oas to work with: problem.ValidationError{},
+			}*/},
 		}),
-
-		endpoint.WithMiddleware(
-			middleware.WithResponseValidation(&ep.Response),
-			middleware.WithJsonResponseWriter(&ep.Response),
-		),
-
 	)
 
-	// Must be pointer to allow ServeHTTP method to be used with *Endpoint
-	return &ep
+	return ep
 }

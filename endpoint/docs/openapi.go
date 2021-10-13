@@ -9,7 +9,7 @@ import (
 	"github.com/charmixer/golang-api-template/app"
 
 	"github.com/charmixer/golang-api-template/endpoint"
-	"github.com/charmixer/golang-api-template/middleware"
+	"github.com/charmixer/golang-api-template/endpoint/problem"
 
 	"go.opentelemetry.io/otel"
 
@@ -23,32 +23,40 @@ var (
 )
 
 type GetOpenapiRequest struct {
-	Format string `json:"format" oas-query:"format" oas-desc:"Format returned by the endpoint, eg. json"`
+	Format string `json:"format" oas-query:"format" query:"format" oas-desc:"Format returned by the endpoint, eg. json"`
 }
+type GetOpenapiResponse exporter.Openapi
 
 // https://golang.org/doc/effective_go#embedding
 type GetOpenapiEndpoint struct {
 	endpoint.Endpoint
-	Request GetOpenapiRequest
-	Response exporter.Openapi
-	responseType string
 }
-func (ep *GetOpenapiEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (ep GetOpenapiEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tr := otel.Tracer("request")
 	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
 	defer span.End()
 
-	t := r.URL.Query().Get("format")
+	request := GetOpenapiRequest{}
+	if err := endpoint.WithRequestQueryParser(ctx, r, &request); err != nil {
+		problem.MustWrite(w, err)
+		return
+	}
 
-	ep.Response = app.Env.OpenAPI
+	response := app.Env.OpenAPI
 
-  if t == "json" {
+	responseType := ""
+  if request.Format == "json" {
 		w.Header().Set("Content-Type", "application/json")
-		ep.responseType = "json"
+		responseType = "json"
   } else {
 		w.Header().Set("Content-Type", "text/plain; application/yaml; charset=utf-8")
-		ep.responseType = "yaml"
+		responseType = "yaml"
+	}
+
+	if err := endpoint.WithResponseWriter(ctx, w, responseType, response); err != nil {
+		problem.MustWrite(w, err)
+		return
 	}
 }
 
@@ -78,12 +86,8 @@ func NewGetOpenapiEndpoint() (endpoint.EndpointHandler) {
 				Schema: GetOpenapiEndpoint.BadRequest{},
 			}*/},
 		}),
-
-		endpoint.WithMiddleware(
-			middleware.WithResponseWriter(&ep.responseType, &ep.Response),
-		),
 	)
 
 	// Must be pointer to allow ServeHTTP method to be used with *Endpoint
-	return &ep
+	return ep
 }
