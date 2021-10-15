@@ -42,12 +42,14 @@ If you get an error try setting `-d localhost`
   - [x] Override environment with flags
   - [x] Default configuration values
 - [x] Setup tracing with OpenTelemetry and Jaeger example
-- [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
-- [ ] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove/disable
+- [x] Setup input / output validation with (https://github.com/go-playground/validator) - must be easy to remove/disable
   - [x] Input validation
-  - [ ] Output validation
+  - [x] Output validation
+- [x] Setup some sort of error handling ([rfc7807](https://datatracker.ietf.org/doc/html/rfc7807))
+- [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
 - [ ] Show validation in docs (OpenAPI spec)
 - [ ] README.md update with guides
-- [ ] Setup some sort of error handling
 - [ ] Utils for parsing request body and query
 - [ ] Health checks with uptime and external deps setup
+- [ ] HTTP Client with easy tracing propagation
+- [ ] Infrastructure reference stack
