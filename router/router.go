@@ -66,7 +66,6 @@ func NewRouter(name string, description string, version string) (*Router) {
 
 	r.NewRoute("GET", "/docs", docs.NewGetDocsEndpoint())
 	r.NewRoute("GET", "/docs/openapi", docs.NewGetOpenapiEndpoint())
-	r.NewRoute("POST", "/docs/openapi", docs.NewGetOpenapiEndpoint())
 
 	r.NewRoute("GET", "/metrics", metrics.NewGetMetricsEndpoint())
 

@@ -11,7 +11,6 @@ import (
 	"github.com/charmixer/golang-api-template/app"
 
 	"github.com/charmixer/golang-api-template/endpoint"
-  // "github.com/charmixer/golang-api-template/middleware"
 
 	"github.com/rs/zerolog/log"
 )
@@ -19,8 +18,6 @@ import (
 type GetDocsRequest struct {}
 type GetDocsEndpoint struct {
 	endpoint.Endpoint
-	Request GetDocsRequest
-	//Response GetMetricsResponse
 }
 func (ep *GetDocsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
@@ -142,10 +139,6 @@ func NewGetDocsEndpoint() (endpoint.EndpointHandler) {
 				//Schema: GetHealthResponse{},
 			}},
 		}),
-
-    endpoint.WithMiddleware(
-
-		),
 	)
 
 	// Must be pointer to allow ServeHTTP method to be used with *Endpoint
