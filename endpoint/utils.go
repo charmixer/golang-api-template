@@ -1,42 +1,43 @@
 package endpoint
 
 import (
-	"fmt"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
-	"encoding/json"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/charmixer/golang-api-template/endpoint/problem"
 
-	"go.opentelemetry.io/otel"
 	"github.com/hetiansu5/urlquery"
+	"go.opentelemetry.io/otel"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
 var (
 	validate *validator.Validate
-	locale string
-	trans ut.Translator
+	locale   string
+	trans    ut.Translator
 )
 
 func init() {
 	validate = validator.New()
 
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-	    name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 
-	    if name == "-" {
-	        return ""
-	    }
+		if name == "-" {
+			return ""
+		}
 
-	    return name
+		return name
 	})
 
 	locale = "en"
@@ -85,7 +86,6 @@ func WithResponseValidation(ctx context.Context, i interface{}) error {
 
 	return prob
 }
-
 
 func WithJsonRequestParser(ctx context.Context, r *http.Request, i interface{}) error {
 	tr := otel.Tracer("request")

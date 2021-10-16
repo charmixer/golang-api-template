@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/charmixer/golang-api-template/router"
 	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/router"
 
 	"github.com/charmixer/oas/exporter"
 
@@ -18,23 +18,23 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type ServeCmd struct {
+type serveCmd struct {
 	Tracing struct {
-		Disabled bool `long:"trace-disable" description:"Disable tracing"`
-		Url string `long:"trace-provider-url" description:"Trace provider endpoint to use instead of default"`
+		Disabled bool   `long:"trace-disable" description:"Disable tracing"`
+		Url      string `long:"trace-provider-url" description:"Trace provider endpoint to use instead of default"`
 		Provider string `long:"trace-provider" description:"Provider to use for tracing" choice:"jaeger" default:"jaeger"`
 	}
 	Public struct {
-		Port int `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
-		Ip string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
+		Port   int    `short:"p" long:"port" description:"Port to serve app on" default:"8080"`
+		Ip     string `short:"i" long:"ip" description:"IP to serve app on" default:"0.0.0.0"`
 		Domain string `short:"d" long:"domain" description:"Domain to access app through" default:"127.0.0.1"`
 	}
 	Timeout struct {
-		Write int `long:"write-timeout" description:"Timeout in seconds for write" default:"10"`
-		Read int `long:"read-timeout" description:"Timeout in seconds for read" default:"5"`
+		Write      int `long:"write-timeout" description:"Timeout in seconds for write" default:"10"`
+		Read       int `long:"read-timeout" description:"Timeout in seconds for read" default:"5"`
 		ReadHeader int `long:"read-header-timeout" description:"Timeout in seconds for read-header" default:"5"`
-		Idle int `long:"idle-timeout" description:"Timeout in seconds for idle" default:"10"`
-		Grace int `long:"grace-timeout" description:"Timeout in seconds before shutting down" default:"15"`
+		Idle       int `long:"idle-timeout" description:"Timeout in seconds for idle" default:"10"`
+		Grace      int `long:"grace-timeout" description:"Timeout in seconds before shutting down" default:"15"`
 	}
 	TLS struct {
 		Cert struct {
@@ -46,7 +46,7 @@ type ServeCmd struct {
 	}
 }
 
-func (cmd *ServeCmd) initTracing() (func()) {
+func (cmd *serveCmd) initTracing() func() {
 	if cmd.Tracing.Disabled || cmd.Tracing.Provider == "" {
 		log.Debug().Msgf("Tracing is disabled")
 		return nil
@@ -80,26 +80,26 @@ func (cmd *ServeCmd) initTracing() (func()) {
 }
 
 func (cmd *ServeCmd) Execute(args []string) error {
-	app.Env.Ip     = cmd.Public.Ip
-	app.Env.Port   = cmd.Public.Port
+	app.Env.Ip = cmd.Public.Ip
+	app.Env.Port = cmd.Public.Port
 	app.Env.Domain = cmd.Public.Domain
-	app.Env.Addr   = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
+	app.Env.Addr = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
 
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-  router := router.NewRouter(Application.Name, Application.Description, Application.Version)
+	router := router.NewRouter(Application.Name, Application.Description, Application.Version)
 	//chain := middleware.GetChain(/*router,*/ Application.Name)
 
 	oasModel := exporter.ToOasModel(router.OpenAPI)
 	app.Env.OpenAPI = oasModel
 
-// 1. instance ServeCmd
-// 2. chain + router
-// 3. server handler er chain så router
+	// 1. instance ServeCmd
+	// 2. chain + router
+	// 3. server handler er chain så router
 
-// 3x. server handler er (router resolve, chain, router(chain resolved)
-//https://github.com/julienschmidt/httprouter
+	// 3x. server handler er (router resolve, chain, router(chain resolved)
+	//https://github.com/julienschmidt/httprouter
 	srv := &http.Server{
 		Addr: app.Env.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
