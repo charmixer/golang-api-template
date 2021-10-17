@@ -79,7 +79,7 @@ func (cmd *serveCmd) initTracing() func() {
 	return nil
 }
 
-func (cmd *ServeCmd) Execute(args []string) error {
+func (cmd *serveCmd) Execute(args []string) error {
 	app.Env.Ip = cmd.Public.Ip
 	app.Env.Port = cmd.Public.Port
 	app.Env.Domain = cmd.Public.Domain
@@ -91,7 +91,12 @@ func (cmd *ServeCmd) Execute(args []string) error {
 	router := router.NewRouter(Application.Name, Application.Description, Application.Version)
 	//chain := middleware.GetChain(/*router,*/ Application.Name)
 
-	oasModel := exporter.ToOasModel(router.OpenAPI)
+	oasModel := exporter.ToOasModel(
+		router.OpenAPI,
+		exporter.WithQueryTag("query"),
+		exporter.WithHeaderTag("header"),
+		exporter.WithCookieTag("cookie"),
+	)
 	app.Env.OpenAPI = oasModel
 
 	// 1. instance ServeCmd
