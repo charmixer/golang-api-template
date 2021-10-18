@@ -3,6 +3,7 @@ package health
 import (
 	"fmt"
 	"net/http"
+
 	"github.com/charmixer/oas/api"
 
 	"github.com/charmixer/golang-api-template/endpoint"
@@ -13,11 +14,11 @@ import (
 
 var (
 	OPENAPI_TAGS = []api.Tag{
-		{Name: "Health", Description:"Endpoints reporting the health of the application"},
+		{Name: "Health", Description: "Endpoints reporting the health of the application"},
 	}
 )
 
-type GetHealthRequest struct {}
+type GetHealthRequest struct{}
 type GetHealthResponse struct {
 	Alive bool `json:"alive_json" oas-desc:"Tells if the service is alive (ping)"`
 	Ready bool `json:"ready_json" oas-desc:"Tells if the service is ready to accept requests"`
@@ -27,6 +28,7 @@ type GetHealthResponse struct {
 type GetHealthEndpoint struct {
 	endpoint.Endpoint
 }
+
 func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tr := otel.Tracer("request")
@@ -62,29 +64,48 @@ func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewGetHealthEndpoint() (endpoint.EndpointHandler) {
+func NewGetHealthEndpoint() endpoint.EndpointHandler {
 	ep := GetHealthEndpoint{}
+
+	/*
+		ep.Setup(
+			endpoint.WithSpecification(api.NewPath(
+				api.WithSummary("Get health information about the service"),
+				api.WithDescription(``),
+				api.WithTags(OPENAPI_TAGS),
+
+				api.WithRequest(
+					api.WithRequestScheme(GetHealthRequest{}),
+				),
+
+				api.WithResponse(
+					api.WithResponseDescription(http.StatusText(http.StatusOK)),
+					api.WithResponseCode(http.StatusOK),
+					api.WithResponseScheme(GetHealthResponse{}),
+				),
+			)),
+	*/
 
 	ep.Setup(
 		endpoint.WithSpecification(api.Path{
-			Summary: "Get health information about the service",
+			Summary:     "Get health information about the service",
 			Description: ``,
-			Tags: OPENAPI_TAGS,
+			Tags:        OPENAPI_TAGS,
 
 			Request: api.Request{
 				Description: ``,
-				Schema: GetHealthRequest{},
+				Schema:      GetHealthRequest{},
 			},
 
 			Responses: []api.Response{{
 				Description: http.StatusText(http.StatusOK),
-				Code: http.StatusOK,
-				Schema: GetHealthResponse{},
-			},/*{
+				Code:        http.StatusOK,
+				Schema:      GetHealthResponse{},
+			}, {
 				Description: http.StatusText(http.StatusBadRequest),
-				Code: http.StatusBadRequest,
-				Schema: problem.ProblemDetails{}, // TODO fix oas to work with: problem.ValidationError{},
-			}*/},
+				Code:        http.StatusBadRequest,
+				Schema:      problem.ValidationProblem{}, // TODO fix oas to work with: problem.ValidationError{},
+			}},
 		}),
 	)
 
