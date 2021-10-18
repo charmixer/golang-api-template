@@ -96,6 +96,7 @@ func (cmd *serveCmd) Execute(args []string) error {
 		exporter.WithQueryTag("query"),
 		exporter.WithHeaderTag("header"),
 		exporter.WithCookieTag("cookie"),
+		exporter.WithDescriptionTag("description"),
 	)
 	app.Env.OpenAPI = oasModel
 
