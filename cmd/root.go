@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/creasty/defaults"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -57,6 +58,7 @@ func init() {
 	parseFlags(&Application)
 
 	// 0. Priority: Defaults, if none of above is found
+	parseDefaults(&Application)
 
 	initLogging()
 }
@@ -77,21 +79,24 @@ func parseYamlFile(file string, config interface{}) {
 }
 
 func parseEnv(prefix string, config interface{}) {
-	err := envconfig.Process(prefix, config)
-	if err != nil {
+	if err := envconfig.Process(prefix, config); err != nil {
 		panic(err)
 	}
 }
 
 func parseFlags(config interface{}) {
-	err := parser.ParseFlags()
-
-	if err != nil {
+	if err := parser.ParseFlags(); err != nil {
 		e := err.(*flags.Error)
 		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
 			fmt.Printf("%s\n", e.Message)
 		}
 		parser.WriteHelp(os.Stdout)
+	}
+}
+
+func parseDefaults(config interface{}) {
+	if err := defaults.Set(config); err != nil {
+		panic(err)
 	}
 }
 
