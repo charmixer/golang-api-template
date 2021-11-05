@@ -57,7 +57,7 @@ func init() {
 	// 1. Priority: Flags
 	parseFlags(&Application)
 
-	// 0. Priority: Defaults, if none of above is found
+	// Defaults, if none of above is found
 	parseDefaults(&Application)
 
 	initLogging()
