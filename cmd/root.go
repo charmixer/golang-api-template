@@ -72,7 +72,7 @@ func parseYamlFile(file string, config interface{}) {
 	if err != nil {
 		panic(err)
 	}
-	err = yaml.Unmarshal(yamlFile, &config)
+	err = yaml.Unmarshal(yamlFile, config)
 	if err != nil {
 		panic(err)
 	}
