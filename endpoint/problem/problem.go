@@ -15,11 +15,11 @@ const ContentProblemDetails = "application/problem+json"
 // ProblemDetails provides a standard encapsulation for problems encountered
 // in web applications and REST APIs.
 type ProblemDetails struct {
-	Status       int    `json:"status,omitempty" oas-desc:"HTTP status code for the response"`
-	Title        string `json:"title,omitempty" oas-desc:"Title of the problem"`
-	Detail       string `json:"detail,omitempty" oas-desc:"Detailed description of the problem"`
-	Type         string `json:"type,omitempty" oas-desc:"Type of problem"`
-	Instance     string `json:"instance,omitempty" oas-desc:"Instance affected by the problem"`
+	Status       int    `json:"status,omitempty" description:"HTTP status code for the response"`
+	Title        string `json:"title,omitempty" description:"Title of the problem"`
+	Detail       string `json:"detail,omitempty" description:"Detailed description of the problem"`
+	Type         string `json:"type,omitempty" description:"Type of problem"`
+	Instance     string `json:"instance,omitempty" description:"Instance affected by the problem"`
 	wrappedError error
 }
 
@@ -148,14 +148,14 @@ func Error(w http.ResponseWriter, msg string, status int) error {
 // reporting of server-side data validation errors.
 type ValidationProblem struct {
 	ProblemDetails
-	ValidationErrors []ValidationError `json:"invalid-params,omitempty" oas-desc:"Validation errors"`
+	ValidationErrors []ValidationError `json:"invalid-params,omitempty" description:"Validation errors"`
 }
 
 // ValidationError indicates a server-side validation error for data submitted
 // as JSON or via a web form.
 type ValidationError struct {
-	FieldName string `json:"name" oas-desc:"Name of the field with failed validation"`
-	Error     string `json:"reason" oas-desc:"Description of the error"`
+	FieldName string `json:"name" description:"Name of the field with failed validation"`
+	Error     string `json:"reason" description:"Description of the error"`
 }
 
 // NewValidationProblem creates an object to represent a server-side validation error.

@@ -20,8 +20,8 @@ var (
 
 type GetHealthRequest struct{}
 type GetHealthResponse struct {
-	Alive bool `json:"alive_json" oas-desc:"Tells if the service is alive (ping)"`
-	Ready bool `json:"ready_json" oas-desc:"Tells if the service is ready to accept requests"`
+	Alive bool `json:"alive_json" description:"Tells if the service is alive (ping)"`
+	Ready bool `json:"ready_json" description:"Tells if the service is ready to accept requests"`
 }
 
 // https://golang.org/doc/effective_go#embedding

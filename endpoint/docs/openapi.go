@@ -23,7 +23,7 @@ var (
 )
 
 type GetOpenapiRequest struct {
-	Format string `json:"format" oas-query:"format" query:"format" oas-desc:"Format returned by the endpoint, eg. json"`
+	Format string `json:"format" query:"format" query:"format" description:"Format returned by the endpoint, eg. json"`
 }
 type GetOpenapiResponse exporter.Openapi
 
