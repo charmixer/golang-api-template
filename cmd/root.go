@@ -48,6 +48,9 @@ func Execute() {
 }
 
 func init() {
+	// 4. Priority: Defaults, used if nothing in the chain overwrites
+	parseDefaults(&Application)
+
 	// 3. Priority: Config file
 	parseYamlFile(os.Getenv("CFG_PATH"), &Application)
 
@@ -57,13 +60,10 @@ func init() {
 	// 1. Priority: Flags
 	parseFlags(&Application)
 
-	// Defaults, if none of above is found
-	parseDefaults(&Application)
-
 	initLogging()
 }
 
-func parseYamlFile(file string, config interface{}) {
+func parseYamlFile(file string, config *App) {
 	if file == "" {
 		return
 	}
@@ -78,13 +78,13 @@ func parseYamlFile(file string, config interface{}) {
 	}
 }
 
-func parseEnv(prefix string, config interface{}) {
+func parseEnv(prefix string, config *App) {
 	if err := envconfig.Process(prefix, config); err != nil {
 		panic(err)
 	}
 }
 
-func parseFlags(config interface{}) {
+func parseFlags(config *App) {
 	if err := parser.ParseFlags(); err != nil {
 		e := err.(*flags.Error)
 		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
@@ -94,7 +94,7 @@ func parseFlags(config interface{}) {
 	}
 }
 
-func parseDefaults(config interface{}) {
+func parseDefaults(config *App) {
 	if err := defaults.Set(config); err != nil {
 		panic(err)
 	}
