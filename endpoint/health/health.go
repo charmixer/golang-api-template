@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/endpoint/problem"
+	hc "github.com/charmixer/golang-api-template/health"
 
 	"go.opentelemetry.io/otel"
 )
@@ -45,6 +46,9 @@ func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		problem.MustWrite(w, err)
 		return
 	}
+
+	checker := hc.Test(ctx)
+	fmt.Printf("%#v", checker["uptime"][0]())
 
 	response := GetHealthResponse{
 		Alive: true,
