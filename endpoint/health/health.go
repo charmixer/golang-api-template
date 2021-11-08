@@ -1,8 +1,10 @@
 package health
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/charmixer/oas/api"
 
@@ -20,14 +22,50 @@ var (
 )
 
 type GetHealthRequest struct{}
-type GetHealthResponse struct {
-	Alive bool `json:"alive_json" description:"Tells if the service is alive (ping)"`
-	Ready bool `json:"ready_json" description:"Tells if the service is ready to accept requests"`
-}
+type GetHealthResponse hc.Health
 
 // https://golang.org/doc/effective_go#embedding
 type GetHealthEndpoint struct {
 	endpoint.Endpoint
+}
+
+var healthChecker *hc.HealthChecker
+
+func init() {
+	healthChecker = hc.New(
+		hc.WithVersion("0.0.6"),
+	)
+
+	healthChecker.AddCheck(
+		hc.WithUptimeCheck("host-uptime"),
+		hc.WithMemTotalAllocCheck("mem-total-alloc"),
+		hc.WithMemObtainedCheck("mem-obtained"),
+		hc.WithNumGcCheck("mem-gc-cycles"),
+		hc.WithCpuCheck("cpu-usage"),
+	)
+
+	ctx := context.Background()
+
+	ticker := time.NewTicker(10 * time.Second)
+	quit := make(chan struct{})
+	isRunning := false
+	go func() {
+		// Init first run asap
+		healthChecker.Check(ctx)
+		for {
+			select {
+			case <-ticker.C:
+				if !isRunning {
+					isRunning = true
+					healthChecker.Check(ctx)
+					isRunning = false
+				}
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -47,12 +85,15 @@ func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	checker := hc.Test(ctx)
-	fmt.Printf("%#v", checker["uptime"][0]())
+	if !healthChecker.IsAvailable() {
+		prop := problem.New(http.StatusServiceUnavailable).WithDetail("Service is warming up")
+		problem.MustWrite(w, prop)
+		return
+	}
 
-	response := GetHealthResponse{
-		Alive: true,
-		Ready: true,
+	response := healthChecker.Health()
+	if response.Status == hc.Fail {
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -66,29 +107,11 @@ func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		problem.MustWrite(w, err)
 		return
 	}
+
 }
 
 func NewGetHealthEndpoint() endpoint.EndpointHandler {
 	ep := GetHealthEndpoint{}
-
-	/*
-		ep.Setup(
-			endpoint.WithSpecification(api.NewPath(
-				api.WithSummary("Get health information about the service"),
-				api.WithDescription(``),
-				api.WithTags(OPENAPI_TAGS),
-
-				api.WithRequest(
-					api.WithRequestScheme(GetHealthRequest{}),
-				),
-
-				api.WithResponse(
-					api.WithResponseDescription(http.StatusText(http.StatusOK)),
-					api.WithResponseCode(http.StatusOK),
-					api.WithResponseScheme(GetHealthResponse{}),
-				),
-			)),
-	*/
 
 	ep.Setup(
 		endpoint.WithSpecification(api.Path{
@@ -108,7 +131,11 @@ func NewGetHealthEndpoint() endpoint.EndpointHandler {
 			}, {
 				Description: http.StatusText(http.StatusBadRequest),
 				Code:        http.StatusBadRequest,
-				Schema:      problem.ValidationProblem{}, // TODO fix oas to work with: problem.ValidationError{},
+				Schema:      problem.ValidationProblem{},
+			}, {
+				Description: http.StatusText(http.StatusServiceUnavailable),
+				Code:        http.StatusServiceUnavailable,
+				Schema:      problem.ProblemDetails{},
 			}},
 		}),
 	)

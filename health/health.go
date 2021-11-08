@@ -2,8 +2,7 @@ package health
 
 import (
 	"context"
-	"syscall"
-	"time"
+	"sync"
 )
 
 type Status string
@@ -27,7 +26,7 @@ type Check struct {
 	ObservedUnit      string            `json:"observedUnit,omitempty"`
 	Status            Status            `json:"status" example:"pass"`
 	AffectedEndpoints []string          `json:"affectedEndpoints,omitempty"`
-	Time              string            `json:"time,omitempty" example:"2019-02-20T22:01:44,654015561+00:00"`
+	Time              string            `json:"time,omitempty"`
 	Output            string            `json:"output,omitempty"`
 	Links             map[string]string `json:"links,omitempty"`
 }
@@ -38,32 +37,127 @@ const (
 	Warn Status = "warn"
 )
 
-type HealthCheck func() (string, Check)
-
-func WithUptimeCheck(ctx context.Context) HealthCheck {
-	si := &syscall.Sysinfo_t{}
-	now := time.Now().UTC().Format(time.RFC3339Nano)
-	return func() (string, Check) {
-		return "uptime", Check{
-			ComponentType: "system",
-			ObservedValue: si.Uptime,
-			ObservedUnit:  "s",
-			Status:        Pass,
-			Time:          now,
-		}
-	}
+type healthCheckResult struct {
+	SystemId    string
+	ComponentId string
+	Check       Check
 }
+type HealthCheck func(ctx context.Context, result chan healthCheckResult)
 
 type HealthChecker struct {
-	checks []HealthCheck
+	mu          sync.Mutex
+	version     string
+	releaseId   string
+	serviceId   string
+	description string
+	checks      []HealthCheck
+	results     map[string]map[string]Check
+	available   bool
 }
 
-func (hc *HealthChecker) Check() {
+func (hc *HealthChecker) AddCheck(checks ...HealthCheck) {
+	hc.mu.Lock()
+	defer hc.mu.Unlock()
 
+	hc.checks = append(hc.checks, checks...)
+}
+func (hc *HealthChecker) Reset() {
+	hc.mu.Lock()
+	defer hc.mu.Unlock()
+
+	hc.results = make(map[string]map[string]Check)
+}
+func (hc *HealthChecker) Checks() []HealthCheck {
+	hc.mu.Lock()
+	defer hc.mu.Unlock()
+
+	return hc.checks
+}
+func (hc *HealthChecker) IsAvailable() bool {
+	hc.mu.Lock()
+	defer hc.mu.Unlock()
+
+	return hc.available
+}
+func (hc *HealthChecker) Health() Health {
+	hc.mu.Lock()
+	defer hc.mu.Unlock()
+
+	var serviceStatus = Pass
+
+	var newResults = make(map[string][]Check, len(hc.results))
+	for k1, v1 := range hc.results {
+		for k2, v2 := range v1 {
+			v2.ComponentID = k2
+			newResults[k1] = append(newResults[k1], v2)
+
+			if v2.Status == Fail {
+				serviceStatus = Fail
+			}
+		}
+	}
+
+	h := Health{
+		Status:      serviceStatus,
+		Version:     hc.version,
+		ReleaseID:   hc.releaseId,
+		Notes:       []string{},
+		Output:      "",
+		ServiceID:   hc.serviceId,
+		Description: hc.description,
+		Checks:      newResults,
+		Links:       map[string]string{},
+	}
+
+	return h
+}
+func (hc *HealthChecker) Check(ctx context.Context) {
+	checks := hc.Checks()
+
+	var channel = make(chan healthCheckResult)
+	defer close(channel)
+	for _, check := range checks {
+		go check(ctx, channel)
+	}
+
+	for i := 0; i < len(checks); i++ {
+		select {
+		case result := <-channel:
+			hc.mu.Lock()
+			if hc.results[result.SystemId] == nil {
+				hc.results[result.SystemId] = make(map[string]Check)
+			}
+			hc.results[result.SystemId][result.ComponentId] = result.Check
+			hc.mu.Unlock()
+		}
+	}
+
+	hc.mu.Lock()
+	hc.available = true
+	hc.mu.Unlock()
 }
 
-func New(ctx context.Context) *HealthChecker {
-	hc := &HealthChecker{}
+type HealthCheckerOption func(e *HealthChecker)
+
+func New(options ...HealthCheckerOption) *HealthChecker {
+	hc := &HealthChecker{
+		results: make(map[string]map[string]Check),
+	}
+
+	for _, opt := range options {
+		opt(hc)
+	}
 
 	return hc
+}
+
+func WithVersion(version string) HealthCheckerOption {
+	return func(hc *HealthChecker) {
+		hc.version = version
+	}
+}
+func WithReleaseId(rId string) HealthCheckerOption {
+	return func(hc *HealthChecker) {
+		hc.releaseId = rId
+	}
 }
