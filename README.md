@@ -48,8 +48,8 @@ If you get an error try setting `-d localhost`
   - [x] Output validation
 - [x] Setup some sort of error handling ([rfc7807](https://datatracker.ietf.org/doc/html/rfc7807))
 - [x] Utils for parsing request body and query
+- [x] Show validation in docs (OpenAPI spec)
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
-- [ ] Show validation in docs (OpenAPI spec)
 - [ ] README.md update with guides
 - [ ] Health checks with uptime and external deps setup
 - [ ] HTTP Client with easy tracing propagation
