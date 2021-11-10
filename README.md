@@ -3,7 +3,8 @@
 After cloning repo, run:
 
 ```
-go mod init <new repo eg. github.com/charmixer/golang-api-template>
+find . -type f \( -name "*.go" \) -exec sed -i '' 's/charmixer\/golang-api-template/your-repo-name/g' {} +;
+go mod init <new repo eg. github.com/username/your-repo-name>
 go mod tidy
 go run main.go serve
 ```
@@ -49,6 +50,7 @@ If you get an error try setting `-d localhost`
 - [x] Utils for parsing request body and query
 - [x] Show validation in docs (OpenAPI spec)
 - [x] Health checks with uptime and external deps setup (https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check)
+- [x] CI pipeline with fmt, vet, staticchecks, build & test
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
 - [ ] README.md update with guides
 - [ ] HTTP Client with easy tracing propagation
