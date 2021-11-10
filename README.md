@@ -49,6 +49,7 @@ If you get an error try setting `-d localhost`
 - [x] Setup some sort of error handling ([rfc7807](https://datatracker.ietf.org/doc/html/rfc7807))
 - [x] Utils for parsing request body and query
 - [x] Show validation in docs (OpenAPI spec)
+- [x] CI pipeline with fmt, vet, staticchecks, build & test
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
 - [ ] README.md update with guides
 - [ ] Health checks with uptime and external deps setup
