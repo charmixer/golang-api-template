@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func WithLogging() (MiddlewareHandler) {
-  return func(next http.Handler) http.Handler {
-  	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func WithLogging() MiddlewareHandler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			tr := otel.Tracer("request")
 			ctx, span := tr.Start(ctx, "middleware.logging")
