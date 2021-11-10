@@ -3,7 +3,8 @@
 After cloning repo, run:
 
 ```
-go mod init <new repo eg. github.com/charmixer/golang-api-template>
+find . -type f \( -name "*.go" \) -exec sed -i '' 's/charmixer\/golang-api-template/your-repo-name/g' {} +;
+go mod init <new repo eg. github.com/username/your-repo-name>
 go mod tidy
 go run main.go serve
 ```
