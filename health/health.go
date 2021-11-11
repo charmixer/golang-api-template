@@ -25,7 +25,7 @@ type Check struct {
 	ComponentType     string            `json:"componentType,omitempty"`
 	ObservedValue     interface{}       `json:"observedValue,omitempty"`
 	ObservedUnit      string            `json:"observedUnit,omitempty"`
-	Status            Status            `json:"status" example:"pass"`
+	Status            Status            `json:"status"`
 	AffectedEndpoints []string          `json:"affectedEndpoints,omitempty"`
 	Time              string            `json:"time,omitempty"`
 	Output            string            `json:"output,omitempty"`
