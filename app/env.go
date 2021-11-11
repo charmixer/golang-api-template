@@ -5,9 +5,9 @@ import (
 )
 
 type Environment struct {
-	Ip string
-	Port int
-	Addr string
+	Ip     string
+	Port   int
+	Addr   string
 	Domain string
 
 	OpenAPI oas.Openapi
