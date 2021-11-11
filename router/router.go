@@ -5,9 +5,9 @@ import (
 
 	"github.com/charmixer/golang-api-template/endpoint"
 
-	"github.com/charmixer/golang-api-template/endpoint/metrics"
-	"github.com/charmixer/golang-api-template/endpoint/health"
 	"github.com/charmixer/golang-api-template/endpoint/docs"
+	"github.com/charmixer/golang-api-template/endpoint/health"
+	"github.com/charmixer/golang-api-template/endpoint/metrics"
 
 	"github.com/charmixer/golang-api-template/middleware"
 
@@ -20,7 +20,7 @@ import (
 
 type Router struct {
 	httprouter.Router
-	OpenAPI api.Api
+	OpenAPI    api.Api
 	Middleware []middleware.MiddlewareHandler
 }
 
@@ -30,7 +30,7 @@ func (r *Router) NewRoute(method string, uri string, ep endpoint.EndpointHandler
 		Str("endpoint", uri).
 		Msg("Setting up endpoint")
 
- 	r.OpenAPI.NewEndpoint(method, uri, ep.Specification())
+	r.OpenAPI.NewEndpoint(method, uri, ep.Specification())
 
 	middlewareHandlers := append(handlers, ep.Middleware()...)
 	r.Handler(method, uri, middleware.New(ep.(http.Handler), middlewareHandlers...))
@@ -42,12 +42,12 @@ func (r *Router) Handle() http.Handler {
 	return middleware.New(r, r.Middleware...)
 }
 
-func NewRouter(name string, description string, version string) (*Router) {
+func NewRouter(name string, description string, version string) *Router {
 	r := &Router{
 		OpenAPI: api.Api{
-			Title: name,
+			Title:       name,
 			Description: description,
-			Version: version,
+			Version:     version,
 		},
 	}
 
@@ -62,7 +62,8 @@ func NewRouter(name string, description string, version string) (*Router) {
 		//middleware.WithAuthentication(),
 	)
 
-	r.NewRoute("GET", "/health", health.NewGetHealthEndpoint())
+	r.NewRoute("GET", "/health/ready", health.NewGetHealthReadyEndpoint())
+	r.NewRoute("GET", "/health/alive", health.NewGetHealthAliveEndpoint())
 
 	r.NewRoute("GET", "/docs", docs.NewGetDocsEndpoint())
 	r.NewRoute("GET", "/docs/openapi", docs.NewGetOpenapiEndpoint())

@@ -3,6 +3,7 @@ package health
 import (
 	"context"
 	"sync"
+	"time"
 )
 
 type Status string
@@ -123,6 +124,11 @@ func (hc *HealthChecker) Check(ctx context.Context) {
 	for i := 0; i < len(checks); i++ {
 		select {
 		case result := <-channel:
+
+			if result.Check.Time == "" {
+				result.Check.Time = time.Now().UTC().Format(time.RFC3339Nano)
+			}
+
 			hc.mu.Lock()
 			if hc.results[result.SystemId] == nil {
 				hc.results[result.SystemId] = make(map[string]Check)
@@ -159,5 +165,15 @@ func WithVersion(version string) HealthCheckerOption {
 func WithReleaseId(rId string) HealthCheckerOption {
 	return func(hc *HealthChecker) {
 		hc.releaseId = rId
+	}
+}
+func WithServiceId(sId string) HealthCheckerOption {
+	return func(hc *HealthChecker) {
+		hc.serviceId = sId
+	}
+}
+func WithDescription(desc string) HealthCheckerOption {
+	return func(hc *HealthChecker) {
+		hc.description = desc
 	}
 }

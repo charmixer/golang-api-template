@@ -15,20 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var (
-	OPENAPI_TAGS = []api.Tag{
-		{Name: "Health", Description: "Endpoints reporting the health of the application"},
-	}
-)
-
-type GetHealthRequest struct{}
-type GetHealthResponse hc.Health
-
-// https://golang.org/doc/effective_go#embedding
-type GetHealthEndpoint struct {
-	endpoint.Endpoint
-}
-
 var healthChecker *hc.HealthChecker
 
 func init() {
@@ -68,13 +54,21 @@ func init() {
 	}()
 }
 
-func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+type GetHealthReadyRequest struct{}
+type GetHealthReadyResponse hc.Health
+
+// https://golang.org/doc/effective_go#embedding
+type GetHealthReadyEndpoint struct {
+	endpoint.Endpoint
+}
+
+func (ep GetHealthReadyEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tr := otel.Tracer("request")
 	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
 	defer span.End()
 
-	request := GetHealthRequest{}
+	request := GetHealthReadyRequest{}
 	if err := endpoint.WithRequestQueryParser(ctx, r, &request); err != nil {
 		problem.MustWrite(w, err)
 		return
@@ -110,8 +104,8 @@ func (ep GetHealthEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewGetHealthEndpoint() endpoint.EndpointHandler {
-	ep := GetHealthEndpoint{}
+func NewGetHealthReadyEndpoint() endpoint.EndpointHandler {
+	ep := GetHealthReadyEndpoint{}
 
 	ep.Setup(
 		endpoint.WithSpecification(api.Path{
@@ -121,13 +115,13 @@ func NewGetHealthEndpoint() endpoint.EndpointHandler {
 
 			Request: api.Request{
 				Description: ``,
-				Schema:      GetHealthRequest{},
+				Schema:      GetHealthReadyRequest{},
 			},
 
 			Responses: []api.Response{{
 				Description: http.StatusText(http.StatusOK),
 				Code:        http.StatusOK,
-				Schema:      GetHealthResponse{},
+				Schema:      GetHealthReadyResponse{},
 			}, {
 				Description: http.StatusText(http.StatusBadRequest),
 				Code:        http.StatusBadRequest,

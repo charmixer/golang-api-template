@@ -19,7 +19,6 @@ func WithUptimeCheck(componentId string) HealthCheck {
 			status = Warn
 		}
 
-		now := time.Now().UTC().Format(time.RFC3339Nano)
 		result <- healthCheckResult{
 			SystemId:    "uptime",
 			ComponentId: componentId,
@@ -28,7 +27,6 @@ func WithUptimeCheck(componentId string) HealthCheck {
 				ObservedValue: int64(up),
 				ObservedUnit:  "s",
 				Status:        status,
-				Time:          now,
 			},
 		}
 	}
@@ -43,7 +41,6 @@ func WithCpuCheck(componentId string) HealthCheck {
 			status = Warn
 		}
 
-		now := time.Now().UTC().Format(time.RFC3339Nano)
 		result <- healthCheckResult{
 			SystemId:    "cpu:utilalization",
 			ComponentId: componentId,
@@ -52,7 +49,6 @@ func WithCpuCheck(componentId string) HealthCheck {
 				ObservedValue: fmt.Sprintf("%.2f", cpu[0]),
 				ObservedUnit:  "%",
 				Status:        status,
-				Time:          now,
 			},
 		}
 	}
@@ -65,7 +61,6 @@ func WithNumGcCheck(componentId string) HealthCheck {
 
 		status := Pass
 
-		now := time.Now().UTC().Format(time.RFC3339Nano)
 		result <- healthCheckResult{
 			SystemId:    "mem:utilalization",
 			ComponentId: componentId,
@@ -74,7 +69,6 @@ func WithNumGcCheck(componentId string) HealthCheck {
 				ObservedValue: fmt.Sprintf("%d", m.NumGC),
 				ObservedUnit:  "num of GC cycles",
 				Status:        status,
-				Time:          now,
 			},
 		}
 	}
@@ -88,7 +82,6 @@ func WithMemObtainedCheck(componentId string) HealthCheck {
 
 		status := Pass
 
-		now := time.Now().UTC().Format(time.RFC3339Nano)
 		result <- healthCheckResult{
 			SystemId:    "mem:utilalization",
 			ComponentId: componentId,
@@ -97,7 +90,6 @@ func WithMemObtainedCheck(componentId string) HealthCheck {
 				ObservedValue: fmt.Sprintf("%d", m.Sys),
 				ObservedUnit:  "bytes",
 				Status:        status,
-				Time:          now,
 			},
 		}
 	}
@@ -110,7 +102,6 @@ func WithMemTotalAllocCheck(componentId string) HealthCheck {
 
 		status := Pass
 
-		now := time.Now().UTC().Format(time.RFC3339Nano)
 		result <- healthCheckResult{
 			SystemId:    "mem:utilalization",
 			ComponentId: componentId,
@@ -119,7 +110,6 @@ func WithMemTotalAllocCheck(componentId string) HealthCheck {
 				ObservedValue: fmt.Sprintf("%d", m.TotalAlloc),
 				ObservedUnit:  "bytes",
 				Status:        status,
-				Time:          now,
 			},
 		}
 	}
