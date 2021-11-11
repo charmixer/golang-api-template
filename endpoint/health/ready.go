@@ -15,12 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var (
-	OPENAPI_TAGS = []api.Tag{
-		{Name: "Health", Description: "Endpoints reporting the health of the application"},
-	}
-)
-
 var healthChecker *hc.HealthChecker
 
 func init() {
