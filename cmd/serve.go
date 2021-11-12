@@ -69,7 +69,7 @@ func (cmd *serveCmd) initTracing() func() {
 		return nil
 	}
 
-	shutdownTracing, err := tracing.SetupTracing(exporter, Application.Name, Application.Environment, Application.Version)
+	shutdownTracing, err := tracing.SetupTracing(exporter, app.Env.Build.Name, app.Env.Build.Environment, app.Env.Build.Version)
 	if err == nil {
 		return shutdownTracing
 	}
@@ -88,8 +88,7 @@ func (cmd *serveCmd) Execute(args []string) error {
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-	router := router.NewRouter(Application.Name, Application.Description, Application.Version)
-	//chain := middleware.GetChain(/*router,*/ Application.Name)
+	router := router.NewRouter(app.Env.Build.Name, Application.Description, app.Env.Build.Version)
 
 	oasModel := exporter.ToOasModel(
 		router.OpenAPI,
@@ -101,12 +100,6 @@ func (cmd *serveCmd) Execute(args []string) error {
 	)
 	app.Env.OpenAPI = oasModel
 
-	// 1. instance ServeCmd
-	// 2. chain + router
-	// 3. server handler er chain så router
-
-	// 3x. server handler er (router resolve, chain, router(chain resolved)
-	//https://github.com/julienschmidt/httprouter
 	srv := &http.Server{
 		Addr: app.Env.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
@@ -114,7 +107,7 @@ func (cmd *serveCmd) Execute(args []string) error {
 		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
 		ReadHeaderTimeout: time.Second * time.Duration(cmd.Timeout.ReadHeader),
 		IdleTimeout:       time.Second * time.Duration(cmd.Timeout.Idle),
-		Handler:           router.Handle(), // chain.Then(router), // Pass our instance of gorilla/mux in.
+		Handler:           router.Handle(),
 	}
 
 	// Run our server in a goroutine so that it doesn't block.

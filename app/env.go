@@ -10,6 +10,15 @@ type Environment struct {
 	Addr   string
 	Domain string
 
+	Build struct {
+		Name        string
+		Version     string
+		Commit      string
+		Date        string
+		Tag         string
+		Environment string // eg. prod or dev
+	}
+
 	OpenAPI oas.Openapi
 }
 
