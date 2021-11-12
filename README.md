@@ -9,6 +9,11 @@ go mod tidy
 go run main.go serve
 ```
 
+To build with supported ldflags use:
+```
+go build -ldflags="-s -w -X main.version=1.0.0 -X main.commit=qwerty -X main.date=20210101 -X main.tag=v1.0.0 -X main.name=golang-template-api -X main.environment=production" .
+```
+
 # What the template gives
 
 ## Configuration setup
