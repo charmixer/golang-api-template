@@ -11,11 +11,11 @@ type Environment struct {
 	Domain string
 
 	Build struct {
-		Name string
-		Version string
-		Commit string
-		Date string
-		Tag string
+		Name        string
+		Version     string
+		Commit      string
+		Date        string
+		Tag         string
 		Environment string // eg. prod or dev
 	}
 

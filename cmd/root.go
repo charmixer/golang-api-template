@@ -11,21 +11,21 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-  "github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/envconfig"
 	"github.com/charmixer/go-flags"
+	"github.com/charmixer/golang-api-template/app"
 )
 
 type App struct {
 	Description string `long:"app-description" description:"Description of application" default:"Gives a simple blueprint for creating new api's"`
-	
+
 	Log struct {
 		Verbose bool   `long:"verbose" short:"v" description:"Verbose logging"`
 		Format  string `long:"log-format" description:"Logging format" choice:"json" choice:"plain"`
 	}
 
-	Serve serveCmd `command:"serve" description:"serves endpoints"`
-	Oas   oasCmd   `command:"oas" description:"Retrieve oas document"`
+	Serve   serveCmd   `command:"serve" description:"serves endpoints"`
+	Oas     oasCmd     `command:"oas" description:"Retrieve oas document"`
 	Version versionCmd `command:"version" description:"Prints the build information from the binary"`
 }
 

@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-  "github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/golang-api-template/router"
 	"github.com/charmixer/oas/exporter"
 )
