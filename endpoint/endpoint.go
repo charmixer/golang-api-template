@@ -3,8 +3,8 @@ package endpoint
 import (
 	"net/http"
 
-	"github.com/charmixer/oas/api"
 	"github.com/charmixer/golang-api-template/middleware"
+	"github.com/charmixer/oas/api"
 )
 
 type EndpointHandler interface {
@@ -15,7 +15,7 @@ type EndpointHandler interface {
 type Endpoint struct {
 	EndpointHandler
 	specification api.Path
-	middleware []middleware.MiddlewareHandler
+	middleware    []middleware.MiddlewareHandler
 }
 type EndpointOption func(e *Endpoint)
 
@@ -25,10 +25,10 @@ func (ep *Endpoint) Setup(options ...EndpointOption) {
 	}
 }
 
-func (ep Endpoint) Specification() (api.Path) {
+func (ep Endpoint) Specification() api.Path {
 	return ep.specification
 }
-func (ep Endpoint) Middleware() ([]middleware.MiddlewareHandler) {
+func (ep Endpoint) Middleware() []middleware.MiddlewareHandler {
 	return ep.middleware
 }
 
