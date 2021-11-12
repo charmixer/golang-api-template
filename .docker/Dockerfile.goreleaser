@@ -1,0 +1,4 @@
+FROM scratch
+COPY golang-api-template-bin /
+ENTRYPOINT ["/golang-api-template-bin"]
+CMD ["serve"]

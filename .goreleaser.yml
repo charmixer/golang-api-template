@@ -12,10 +12,20 @@ before:
 builds:
   # You can have multiple builds defined as a yaml list
   -
+    # Binary name.
+    # Can be a path (e.g. `bin/app`) to wrap the binary in a directory.
+    # Default is the name of the project directory.
+    binary: golang-api-template-bin
+
     # Custom environment variables to be set during the builds.
     # Default is empty.
     env:
       - CGO_ENABLED=0
+
+    # Custom ldflags templates.
+    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.FullCommit}} -X main.date={{.Date}} -X main.tag={{.Tag}} -X main.name={{.ProjectName}} -X main.environment=production
 
     # GOOS list to build for.
     # For more info refer to: https://golang.org/doc/install/source#environment
@@ -29,24 +39,10 @@ builds:
     # Defaults are 386, amd64 and arm64.
     goarch:
       - amd64
-      - arm
       - arm64
-
-    # GOARM to build for when GOARCH is arm.
-    # For more info refer to: https://golang.org/doc/install/source#environment
-    # Default is only 6.
-    goarm:
-      - 6
-      - 7
 
 checksum:
   algorithm: sha256
-
-changelog:
-  # Sorts the changelog by the commit's messages.
-  # Could either be asc, desc or empty
-  # Default is empty
-  sort: asc
 
 release:
 
@@ -59,3 +55,40 @@ release:
   # You can change the name of the release.
   # Default is `{{.Tag}}` on OSS and `{{.PrefixedTag}}` on Pro.
   name_template: "{{.Tag}}"
+
+dockers:
+  - image_templates: ["ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-arm64"]
+    use: buildx
+    goarch: arm64
+    dockerfile: .docker/Dockerfile.goreleaser
+    build_flag_templates: ["--platform=linux/arm64/v8"]
+    skip_push: auto
+
+  - image_templates: ["ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-amd64"]
+    use: buildx
+    goarch: amd64
+    dockerfile: .docker/Dockerfile.goreleaser
+    build_flag_templates: ["--platform=linux/amd64"]
+    skip_push: auto
+
+docker_manifests:
+  - name_template: ghcr.io/charmixer/{{.ProjectName}}:v{{ .Major }}
+    image_templates:
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-arm64
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-amd64
+    skip_push: auto
+  - name_template: ghcr.io/charmixer/{{.ProjectName}}:v{{ .Major }}.{{ .Minor }}
+    image_templates:
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-arm64
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-amd64
+    skip_push: auto
+  - name_template: ghcr.io/charmixer/{{.ProjectName}}:v{{ .Major }}.{{ .Minor }}.{{ .Patch }}
+    image_templates:
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-arm64
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-amd64
+    skip_push: auto
+  - name_template: ghcr.io/charmixer/{{.ProjectName}}:latest
+    image_templates:
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-arm64
+      - ghcr.io/charmixer/{{.ProjectName}}:{{ .Version }}-linux-amd64
+    skip_push: auto

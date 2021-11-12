@@ -11,16 +11,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+  "github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/envconfig"
 	"github.com/charmixer/go-flags"
 )
 
 type App struct {
-	Name        string `long:"app-name" description:"Name of application" default:"golang-api-template"`
 	Description string `long:"app-description" description:"Description of application" default:"Gives a simple blueprint for creating new api's"`
-	Environment string `long:"environment" description:"Environment the application is running in, eg. prod or dev" default:"dev"`
-	Version     string `long:"version" description:"Version of the application" default:"0.0.0"`
-
+	
 	Log struct {
 		Verbose bool   `long:"verbose" short:"v" description:"Verbose logging"`
 		Format  string `long:"log-format" description:"Logging format" choice:"json" choice:"plain"`
@@ -28,12 +26,20 @@ type App struct {
 
 	Serve serveCmd `command:"serve" description:"serves endpoints"`
 	Oas   oasCmd   `command:"oas" description:"Retrieve oas document"`
+	Version versionCmd `command:"version" description:"Prints the build information from the binary"`
 }
 
 var Application App
 var parser = flags.NewParser(&Application, flags.HelpFlag|flags.PassDoubleDash)
 
-func Execute() {
+func Execute(name, version, commit, date, tag, environment string) {
+	app.Env.Build.Name = name
+	app.Env.Build.Version = version
+	app.Env.Build.Tag = tag
+	app.Env.Build.Commit = commit
+	app.Env.Build.Date = date
+	app.Env.Build.Environment = environment
+
 	_, err := parser.Execute()
 
 	if err != nil {
