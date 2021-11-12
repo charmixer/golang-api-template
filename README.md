@@ -57,6 +57,7 @@ If you get an error try setting `-d localhost`
 - [x] Health checks with uptime and external deps setup (https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check)
 - [x] CI pipeline with fmt, vet, staticchecks, build & test
 - [x] CD pipeline using goreleaser - triggered by tag push
+- [x] Publish to Github Packages (ghcr.io) with GoReleaser - disable by adding skip flag to the docker section in: `.goreleaser.yml` (see GoReleaser docs)
 - [ ] Setup changelog generator (https://github.com/charmixer/auto-changelog-action)
 - [ ] README.md update with guides
 - [ ] HTTP Client with easy tracing propagation
