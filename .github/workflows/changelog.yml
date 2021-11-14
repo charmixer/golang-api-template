@@ -1,0 +1,33 @@
+name: Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+  issues:
+    types: [closed, edited]
+
+
+jobs:
+  generate_changelog:
+    runs-on: ubuntu-latest
+
+    name: Generate changelog for main branch
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup cache
+        uses: actions/cache@v2
+        with:
+          path: .cache
+          key: ${{ runner.os }}-build-cache
+
+      - name: Generate changelog
+        uses: charmixer/auto-changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit & push changelog
+        run: |
+          git add CHANGELOG.md && git commit -m 'Updated CHANGELOG.md' # && git push || echo "No changes to CHANGELOG.md"
