@@ -39,7 +39,7 @@ jobs:
         run: echo ".cache" >> .gitignore
 
       - name: ls cache
-        run: ls .cache 2> /dev/null
+        run: ls .cache || echo "Nothing"
 
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
@@ -47,7 +47,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: ls cache
-        run: ls .cache 2> /dev/null
+        run: ls .cache || echo "Nothing"
 
       - name: Check for changes
         run: |
