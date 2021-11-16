@@ -21,12 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-
-        #- name: Setup cache
-        # uses: actions/cache@v2
-        #with:
-        #  path: .cache
-        #  key: ${{ runner.os }}-build-cache
+      - name: Rate limit
+        run: curl -u ${{ GITHUB_TOKEN }}:x-oauth-basic -I https://api.github.com/users/octocat
 
       - name: Cache http calls
         id: cache-changelog-calls
@@ -38,16 +34,10 @@ jobs:
       - name: Ignore cache
         run: echo ".cache" >> .git/info/exclude
 
-      - name: ls cache
-        run: ls .cache || echo "Nothing"
-
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: ls cache
-        run: ls .cache || echo "Nothing"
 
       - name: Check for changes
         run: |
@@ -69,3 +59,7 @@ jobs:
           labels: ci
           branch: _ci_changelog
           base: main
+
+
+      - name: Rate limit
+        run: curl -u ${{ GITHUB_TOKEN }}:x-oauth-basic -I https://api.github.com/users/octocat
