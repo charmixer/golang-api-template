@@ -13,7 +13,6 @@ import (
 
 	"github.com/charmixer/envconfig"
 	"github.com/charmixer/go-flags"
-	"github.com/charmixer/golang-api-template/app"
 )
 
 type App struct {
@@ -32,14 +31,7 @@ type App struct {
 var Application App
 var parser = flags.NewParser(&Application, flags.HelpFlag|flags.PassDoubleDash)
 
-func Execute(name, version, commit, date, tag, environment string) {
-	app.Env.Build.Name = name
-	app.Env.Build.Version = version
-	app.Env.Build.Tag = tag
-	app.Env.Build.Commit = commit
-	app.Env.Build.Date = date
-	app.Env.Build.Environment = environment
-
+func Execute() {
 	_, err := parser.Execute()
 
 	if err != nil {

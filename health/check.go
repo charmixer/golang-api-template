@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/charmixer/golang-api-template/app"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
 )
@@ -110,6 +111,111 @@ func WithMemTotalAllocCheck(componentId string) HealthCheck {
 				ObservedValue: fmt.Sprintf("%d", m.TotalAlloc),
 				ObservedUnit:  "bytes",
 				Status:        status,
+			},
+		}
+	}
+}
+
+func WithBuildTagCheck(componentId string) HealthCheck {
+	return func(ctx context.Context, result chan healthCheckResult) {
+		buildValue := app.Env.Build.Tag
+
+		if buildValue == "" {
+			result <- healthCheckResult{}
+			return
+		}
+
+		result <- healthCheckResult{
+			SystemId:    "build",
+			ComponentId: componentId,
+			Check: Check{
+				ComponentType: "app",
+				ObservedValue: buildValue,
+				Status:        Pass,
+			},
+		}
+	}
+}
+
+func WithBuildCommitCheck(componentId string) HealthCheck {
+	return func(ctx context.Context, result chan healthCheckResult) {
+		buildValue := app.Env.Build.Commit
+
+		if buildValue == "" {
+			result <- healthCheckResult{}
+			return
+		}
+
+		result <- healthCheckResult{
+			SystemId:    "build",
+			ComponentId: componentId,
+			Check: Check{
+				ComponentType: "app",
+				ObservedValue: buildValue,
+				Status:        Pass,
+			},
+		}
+	}
+}
+
+func WithBuildEnvironmentCheck(componentId string) HealthCheck {
+	return func(ctx context.Context, result chan healthCheckResult) {
+		buildValue := app.Env.Build.Environment
+
+		if buildValue == "" {
+			result <- healthCheckResult{}
+			return
+		}
+
+		result <- healthCheckResult{
+			SystemId:    "build",
+			ComponentId: componentId,
+			Check: Check{
+				ComponentType: "app",
+				ObservedValue: buildValue,
+				Status:        Pass,
+			},
+		}
+	}
+}
+
+func WithBuildNameCheck(componentId string) HealthCheck {
+	return func(ctx context.Context, result chan healthCheckResult) {
+		buildValue := app.Env.Build.Name
+
+		if buildValue == "" {
+			result <- healthCheckResult{}
+			return
+		}
+
+		result <- healthCheckResult{
+			SystemId:    "build",
+			ComponentId: componentId,
+			Check: Check{
+				ComponentType: "app",
+				ObservedValue: buildValue,
+				Status:        Pass,
+			},
+		}
+	}
+}
+
+func WithBuildVersionCheck(componentId string) HealthCheck {
+	return func(ctx context.Context, result chan healthCheckResult) {
+		buildValue := app.Env.Build.Version
+
+		if buildValue == "" {
+			result <- healthCheckResult{}
+			return
+		}
+
+		result <- healthCheckResult{
+			SystemId:    "build",
+			ComponentId: componentId,
+			Check: Check{
+				ComponentType: "app",
+				ObservedValue: buildValue,
+				Status:        Pass,
 			},
 		}
 	}

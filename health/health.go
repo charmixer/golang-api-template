@@ -125,6 +125,10 @@ func (hc *HealthChecker) Check(ctx context.Context) {
 		select {
 		case result := <-channel:
 
+			if result.SystemId == "" || result.ComponentId == "" {
+				continue
+			}
+
 			if result.Check.Time == "" {
 				result.Check.Time = time.Now().UTC().Format(time.RFC3339Nano)
 			}
@@ -141,6 +145,12 @@ func (hc *HealthChecker) Check(ctx context.Context) {
 	hc.mu.Lock()
 	hc.available = true
 	hc.mu.Unlock()
+}
+
+func (hc *HealthChecker) SetOption(options ...HealthCheckerOption) {
+	for _, opt := range options {
+		opt(hc)
+	}
 }
 
 type HealthCheckerOption func(e *HealthChecker)

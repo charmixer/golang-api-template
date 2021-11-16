@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmixer/oas/api"
 
+	"github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/endpoint/problem"
 	hc "github.com/charmixer/golang-api-template/health"
@@ -19,7 +20,7 @@ var healthChecker *hc.HealthChecker
 
 func init() {
 	healthChecker = hc.New(
-		hc.WithVersion("0.0.6"),
+		hc.WithDescription("Readiness of the service"),
 	)
 
 	healthChecker.AddCheck(
@@ -28,6 +29,11 @@ func init() {
 		hc.WithMemObtainedCheck("mem-obtained"),
 		hc.WithNumGcCheck("mem-gc-cycles"),
 		hc.WithCpuCheck("cpu-usage"),
+
+		hc.WithBuildNameCheck("build-name"),
+		hc.WithBuildTagCheck("build-tag"),
+		hc.WithBuildCommitCheck("build-commit"),
+		hc.WithBuildEnvironmentCheck("build-environment"),
 	)
 
 	ctx := context.Background()
@@ -106,6 +112,12 @@ func (ep GetHealthReadyEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 func NewGetHealthReadyEndpoint() endpoint.EndpointHandler {
 	ep := GetHealthReadyEndpoint{}
+
+	// Has to be set after init, since env is not available until then
+	healthChecker.SetOption(
+		hc.WithVersion(app.Env.Build.Version),
+		hc.WithReleaseId(app.Env.Build.Commit),
+	)
 
 	ep.Setup(
 		endpoint.WithSpecification(api.Path{
