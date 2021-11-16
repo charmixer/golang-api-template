@@ -36,7 +36,7 @@ jobs:
           key: ${{ runner.os }}-github-changelog-cache
 
       - name: Testing
-        run: ls ${{ runner.temp }} && ls ${{ runner.os }}-github-changelog-cache
+        run: ls ${{ runner.temp }}
 
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
@@ -48,6 +48,9 @@ jobs:
           #git config user.name github-actions
           #git config user.email github-actions@github.com
           #git add CHANGELOG.md && git commit -m 'Updated CHANGELOG.md' && git push origin HEAD:main || echo "No changes to CHANGELOG.md"
+
+      - name: Testing
+        run: ls ${{ runner.temp }} && ls ${{ runner.temp }}/github-changelog-http-cache
 
       - name: Check for changes
         run: |
