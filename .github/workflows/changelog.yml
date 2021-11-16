@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Rate limit
-        run: curl -u ${{ secrets.GITHUB_TOKEN }}:x-oauth-basic -I https://api.github.com/users/octocat
+        run: curl -u github-actions:${{ secrets.GITHUB_TOKEN }} -I https://api.github.com/users/octocat
 
       - name: Cache http calls
         id: cache-changelog-calls
@@ -62,4 +62,4 @@ jobs:
 
 
       - name: Rate limit
-        run: curl -u ${{ secrets.GITHUB_TOKEN }}:x-oauth-basic -I https://api.github.com/users/octocat
+        run: curl -u github-actions:${{ secrets.GITHUB_TOKEN }} -I https://api.github.com/users/octocat
