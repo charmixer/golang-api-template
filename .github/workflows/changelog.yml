@@ -48,7 +48,7 @@ jobs:
 
       - name: Create Pull Request
         if: env.changes == 1
-        uses: peter-evans/create-pull-request@v2
+        uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           author: ${{ env.CI_USER }} <${{ env.CI_EMAIL }}>
