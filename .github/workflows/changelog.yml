@@ -35,6 +35,9 @@ jobs:
           path: /tmp/github-changelog-http-cache
           key: ${{ github.action }}-cache
 
+      - name: Testing
+        run: ls /tmp/github-changelog-http-cache
+
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
         with:
