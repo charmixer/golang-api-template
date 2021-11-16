@@ -2,7 +2,7 @@ name: Changelog
 
 on:
   pull_request:
-    types: [closed]
+    types: [closed, edited]
     # branches: [main]
 
   issues:
