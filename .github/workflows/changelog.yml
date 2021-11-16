@@ -29,6 +29,13 @@ jobs:
         #  path: .cache
         #  key: ${{ runner.os }}-build-cache
 
+      - name: Cache http calls
+        id: cache-changelog-calls
+        uses: actions/cache@v2
+        with:
+          path: /tmp/github-changelog-http-cache
+          key: ${{ env.GITHUB_WORKFLOW }}-cache
+
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
         with:
