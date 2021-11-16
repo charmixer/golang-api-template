@@ -32,11 +32,11 @@ jobs:
         id: cache-changelog-calls
         uses: actions/cache@v2
         with:
-          path: /tmp/github-changelog-http-cache
-          key: ${{ github.action }}-cache
+          path: ${{ runner.temp }}/github-changelog-http-cache
+          key: ${{ runner.os }}-github-changelog-cache
 
       - name: Testing
-        run: ls /tmp/github-changelog-http-cache
+        run: ls ${{ runner.temp }} && ls ${{ runner.os }}-github-changelog-cache
 
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
