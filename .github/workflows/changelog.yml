@@ -43,7 +43,7 @@ jobs:
       - name: Check for changes
         run: |
           if [[ `git status --porcelain` ]]; then
-            echo ::set-env name=changes::1
+            echo "changes=1" >> $GITHUB_ENV
           fi
 
       - name: Create Pull Request
