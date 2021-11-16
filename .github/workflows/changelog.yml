@@ -34,7 +34,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/github-changelog-http-cache
-          key: ${{ env.GITHUB_WORKFLOW }}-cache
+          key: ${{ github.action }}-cache
 
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
