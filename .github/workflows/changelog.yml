@@ -14,6 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     name: Generate changelog for main branch
+
+    env:
+      - CI_USER: github-actions
+      - CI_EMAIL: github-actions@github.com
+
     steps:
       - uses: actions/checkout@v2
 
@@ -29,8 +34,29 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit & push changelog
+          #- name: Commit & push changelog
+          #run: |
+          #git config user.name github-actions
+          #git config user.email github-actions@github.com
+          #git add CHANGELOG.md && git commit -m 'Updated CHANGELOG.md' && git push origin HEAD:main || echo "No changes to CHANGELOG.md"
+
+      - name: Check for changes
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add CHANGELOG.md && git commit -m 'Updated CHANGELOG.md' && git push origin HEAD:main || echo "No changes to CHANGELOG.md"
+          if [[ `git status --porcelain` ]]; then
+            echo ::set-env name=changes::1
+          fi
+
+      - name: Create Pull Request
+        if: env.changes == 1
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          author: ${{ $CI_USER }} <${{ $CI_EMAIL }}>
+          committer: ${{ $CI_USER }} <${{ $CI_EMAIL }}>
+          commit-message: "Updated CHANGELOG.md"
+          title: 'Update CHANGELOG'
+          body: |
+            Updated CHANGELOG.md
+          labels: ci
+          assignees: ${{ $CI_USER }}
+          branch: _ci_changelog
