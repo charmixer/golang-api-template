@@ -1,0 +1,60 @@
+name: Changelog
+
+on:
+  pull_request:
+    types: [closed, edited]
+
+  issues:
+    types: [closed, edited]
+
+jobs:
+  generate_changelog:
+    runs-on: ubuntu-latest
+
+    name: Generate changelog for main branch
+
+    env:
+      CI_USER: github-actions
+      CI_EMAIL: github-actions@github.com
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache http calls
+        id: cache-changelog-calls
+        uses: actions/cache@v2
+        with:
+          path: .cache
+          key: ${{ runner.os }}-github-changelog-cache
+
+      - name: Ignore cache
+        run: |
+          echo "cache-file=.cache" >> .github_changelog_generator &&
+          echo ".cache" >> .git/info/exclude &&
+          echo ".github_changelog_generator" >> .git/info/exclude
+
+      - name: Generate changelog
+        uses: charmixer/auto-changelog-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for changes
+        run: |
+          if [[ `git status --porcelain` ]]; then
+            echo "changes=1" >> $GITHUB_ENV
+          fi
+
+      - name: Create Pull Request
+        if: env.changes == 1
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          author: ${{ env.CI_USER }} <${{ env.CI_EMAIL }}>
+          committer: ${{ env.CI_USER }} <${{ env.CI_EMAIL }}>
+          commit-message: "Updated CHANGELOG.md"
+          title: 'Update CHANGELOG'
+          body: |
+            Updated CHANGELOG.md
+          labels: ci
+          branch: _ci_changelog
+          base: main
