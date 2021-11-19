@@ -60,6 +60,6 @@ If you get an error try setting `-d localhost`
 - [x] Publish to Github Packages (ghcr.io) with GoReleaser - disable by adding skip flag to the docker section in: `.goreleaser.yml` (see GoReleaser docs)
 - [x] Setup changelog generator (https://github.com/charmixer/auto-changelog-action) - currently creates pull requests
   - [ ] Should somehow create the changelog before release tag is created, so it gets baked in
+- [x] Infrastructure reference stack - includes prometheus, jaeger and grafana
 - [ ] README.md update with guides
 - [ ] HTTP Client with easy tracing propagation
-- [ ] Infrastructure reference stack
