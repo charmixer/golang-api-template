@@ -3,7 +3,6 @@ name: Changelog
 on:
   pull_request:
     types: [closed, edited]
-    # branches: [main]
 
   issues:
     types: [closed, edited]
@@ -21,9 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Rate limit
-        run: curl -u github-actions:${{ secrets.GITHUB_TOKEN }} -I https://api.github.com/users/octocat
-
       - name: Cache http calls
         id: cache-changelog-calls
         uses: actions/cache@v2
@@ -32,7 +28,10 @@ jobs:
           key: ${{ runner.os }}-github-changelog-cache
 
       - name: Ignore cache
-        run: echo ".cache" >> .git/info/exclude
+        run: |
+          echo "cache-file=.cache" >> .github_changelog_generator &&
+          echo ".cache" >> .git/info/exclude &&
+          echo ".github_changelog_generator" >> .git/info/exclude
 
       - name: Generate changelog
         uses: charmixer/auto-changelog-action@v1
@@ -59,7 +58,3 @@ jobs:
           labels: ci
           branch: _ci_changelog
           base: main
-
-
-      - name: Rate limit
-        run: curl -u github-actions:${{ secrets.GITHUB_TOKEN }} -I https://api.github.com/users/octocat
