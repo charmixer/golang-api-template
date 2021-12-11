@@ -2,10 +2,12 @@ package tracing
 
 import (
 	"context"
+
 	"go.opentelemetry.io/otel"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -59,6 +61,9 @@ func SetupTracing(exp sdktrace.SpanExporter, service string, environment string,
 	// Register our TracerProvider as the global so any imported
 	// instrumentation in the future will default to using it.
 	otel.SetTracerProvider(tp)
+
+	// Register the TraceContext propagator globally
+	otel.SetTextMapPropagator(propagation.TraceContext{})
 
 	return func() {
 		err := tp.Shutdown(ctx)

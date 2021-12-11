@@ -26,7 +26,7 @@ type GetHealthAliveEndpoint struct {
 func (ep GetHealthAliveEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	tr := otel.Tracer("request")
-	ctx, span := tr.Start(ctx, fmt.Sprintf("%s execution", r.URL.Path))
+	ctx, span := tr.Start(ctx, fmt.Sprintf("%s handler", r.URL.Path))
 	defer span.End()
 
 	w.Header().Set("Content-Type", "application/json")

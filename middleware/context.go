@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
+	"fmt"
 	"net"
 	"net/http"
+
+	"github.com/gofrs/uuid"
 )
 
 func WithContext() MiddlewareHandler {
@@ -12,6 +14,8 @@ func WithContext() MiddlewareHandler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Check for incoming header, use it if exists
 			reqID := r.Header.Get("X-Request-Id")
+
+			fmt.Printf("%#v\n", r.Header)
 
 			// Create request id with UUID4
 			if reqID == "" {
@@ -21,7 +25,9 @@ func WithContext() MiddlewareHandler {
 
 			r.Header.Set("X-Request-Id", reqID)
 
-			ctx := context.WithValue(r.Context(), "req_id", reqID)
+			ctx := r.Context()
+
+			ctx = context.WithValue(ctx, "req_id", reqID)
 
 			host, _, _ := net.SplitHostPort(r.RemoteAddr)
 			ctx = context.WithValue(ctx, "remote_ip", host)

@@ -23,15 +23,15 @@ func WithLogging() MiddlewareHandler {
 
 			next.ServeHTTP(wrapped, r.WithContext(ctx))
 
-			ctx, span = tr.Start(ctx, "write request to log")
+			ctx, span = tr.Start(r.Context(), "write request to log")
 			defer span.End()
 
 			log.Info().
 				Str("type", "access").
-				Str("request_id", r.Context().Value("req_id").(string)).
-				Str("remote_ip", r.Context().Value("remote_ip").(string)).
-				Str("user_agent", r.Context().Value("user_agent").(string)).
-				Str("referer", r.Context().Value("referer").(string)).
+				Str("request_id", ctx.Value("req_id").(string)).
+				Str("remote_ip", ctx.Value("remote_ip").(string)).
+				Str("user_agent", ctx.Value("user_agent").(string)).
+				Str("referer", ctx.Value("referer").(string)).
 				Str("method", r.Method).
 				Str("duration", time.Since(start).String()).
 				Int("status", wrapped.Status).

@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 
 	"github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/oas/api"
@@ -21,15 +23,21 @@ type GetDocsEndpoint struct {
 }
 
 func (ep *GetDocsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
+	ctx, span := otel.Tracer("request").Start(r.Context(), fmt.Sprintf("%s handler", r.URL.Path))
+	defer span.End()
 
-	ctx := r.Context()
+	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
 
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		log.Error().Err(err)
 		panic(err)
 	}
+
+	// request.Header.Set("X-Request-Id", ctx.Value("req_id").(string))
+
+	prop := propagation.TraceContext{}
+	prop.Inject(ctx, propagation.HeaderCarrier(request.Header))
 
 	client := http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
