@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -14,8 +13,6 @@ func WithContext() MiddlewareHandler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Check for incoming header, use it if exists
 			reqID := r.Header.Get("X-Request-Id")
-
-			fmt.Printf("%#v\n", r.Header)
 
 			// Create request id with UUID4
 			if reqID == "" {

@@ -58,6 +58,26 @@ func New(status int) *ProblemDetails {
 	}
 }
 
+// Internal returns an internal ProblemDetails error object.
+func Internal() *ProblemDetails {
+	status := http.StatusInternalServerError
+	return &ProblemDetails{
+		Status: status,
+		Title:  http.StatusText(status),
+		Type:   "https://httpstatuses.com/" + strconv.Itoa(status),
+	}
+}
+
+// Client returns an client specific ProblemDetails error object.
+func Client() *ProblemDetails {
+	status := http.StatusBadRequest
+	return &ProblemDetails{
+		Status: status,
+		Title:  http.StatusText(status),
+		Type:   "https://httpstatuses.com/" + strconv.Itoa(status),
+	}
+}
+
 // Errorf uses fmt.Errorf to add a detail message to the ProblemDetails object.
 // It supports the %w verb.
 func (pd *ProblemDetails) Errorf(fmtstr string, args ...interface{}) *ProblemDetails {

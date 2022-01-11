@@ -29,9 +29,7 @@ type GetMetricsEndpoint struct {
 }
 
 func (ep GetMetricsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	tr := otel.Tracer("request")
-	ctx, span := tr.Start(ctx, fmt.Sprintf("%s handler", r.URL.Path))
+	_, span := otel.Tracer("request").Start(r.Context(), fmt.Sprintf("%s handler", r.URL.Path))
 	defer span.End()
 
 	t := promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).(http.HandlerFunc)
