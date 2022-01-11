@@ -5,6 +5,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
@@ -17,6 +18,10 @@ func WithTracing(appName string) MiddlewareHandler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
+			prop := propagation.TraceContext{}
+			ctx = prop.Extract(ctx, propagation.HeaderCarrier(r.Header))
+
+			// span := trace.SpanFromContext(ctx)
 			ctxTraced, span := otel.Tracer("request").Start(ctx, r.URL.Path)
 			defer span.End()
 

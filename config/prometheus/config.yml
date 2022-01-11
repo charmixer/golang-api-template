@@ -1,0 +1,21 @@
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+
+  external_labels:
+    monitor: 'codelab-monitor'
+
+scrape_configs:
+  - job_name: 'prometheus'
+
+    scrape_interval: 30s
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'golang-api-template'
+
+    scrape_interval: 60s
+    scheme: http
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['golang-api-template:8080']

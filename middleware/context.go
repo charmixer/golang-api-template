@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"context"
-	"github.com/gofrs/uuid"
 	"net"
 	"net/http"
+
+	"github.com/gofrs/uuid"
 )
 
 func WithContext() MiddlewareHandler {
@@ -21,7 +22,9 @@ func WithContext() MiddlewareHandler {
 
 			r.Header.Set("X-Request-Id", reqID)
 
-			ctx := context.WithValue(r.Context(), "req_id", reqID)
+			ctx := r.Context()
+
+			ctx = context.WithValue(ctx, "req_id", reqID)
 
 			host, _, _ := net.SplitHostPort(r.RemoteAddr)
 			ctx = context.WithValue(ctx, "remote_ip", host)

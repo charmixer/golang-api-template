@@ -4,10 +4,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
 
 	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/endpoint/problem"
 	"github.com/charmixer/oas/api"
 
 	"github.com/charmixer/golang-api-template/endpoint"
@@ -21,37 +26,50 @@ type GetDocsEndpoint struct {
 }
 
 func (ep *GetDocsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
+	ctx, span := otel.Tracer("request").Start(r.Context(), fmt.Sprintf("%s handler", r.URL.Path))
+	defer span.End()
 
-	ctx := r.Context()
+	url := fmt.Sprintf("http://%s:%d/aadocs/openapi?format=json", app.Env.Domain, app.Env.Port)
 
-	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		log.Error().Err(err)
-		panic(err)
+		span.SetStatus(codes.Error, err.Error())
+		problem.MustWrite(w, problem.Internal())
+		return
 	}
 
-	client := http.Client{
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(request.Header))
+
+	client := &http.Client{
+		Timeout:   time.Second * 10,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 
-	// Added tracing tile client
-	res, err := client.Do(request) // http.DefaultClient
+	res, err := client.Do(request)
 	if err != nil {
 		log.Error().Err(err)
-		panic(err)
+		span.SetStatus(codes.Error, err.Error())
+		problem.MustWrite(w, problem.Internal())
+		return
 	}
 	defer res.Body.Close()
 
 	spec, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Error().Err(err)
-		panic(err)
+		span.SetStatus(codes.Error, err.Error())
+		problem.MustWrite(w, problem.Internal())
+		return
 	}
 
 	if res.StatusCode != http.StatusOK {
-		log.Error().Msgf("Status not OK, got: '%d'", res.StatusCode)
-		panic(err)
+		msg := fmt.Sprintf("Status not OK, got: '%d'", res.StatusCode)
+
+		log.Error().Msg(msg)
+		span.SetStatus(codes.Error, msg)
+		problem.MustWrite(w, problem.Internal())
+		return
 	}
 
 	/*  w.Write([]byte(fmt.Sprintf(`

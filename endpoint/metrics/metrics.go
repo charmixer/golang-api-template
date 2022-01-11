@@ -1,9 +1,12 @@
 package metrics
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
+	"go.opentelemetry.io/otel"
 
 	"github.com/charmixer/golang-api-template/endpoint"
 	// "github.com/charmixer/golang-api-template/middleware"
@@ -26,6 +29,9 @@ type GetMetricsEndpoint struct {
 }
 
 func (ep GetMetricsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	_, span := otel.Tracer("request").Start(r.Context(), fmt.Sprintf("%s handler", r.URL.Path))
+	defer span.End()
+
 	t := promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).(http.HandlerFunc)
 	t.ServeHTTP(w, r)
 }
