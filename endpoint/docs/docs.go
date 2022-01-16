@@ -29,7 +29,7 @@ func (ep *GetDocsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx, span := otel.Tracer("request").Start(r.Context(), fmt.Sprintf("%s handler", r.URL.Path))
 	defer span.End()
 
-	url := fmt.Sprintf("http://%s:%d/aadocs/openapi?format=json", app.Env.Domain, app.Env.Port)
+	url := fmt.Sprintf("http://%s:%d/docs/openapi?format=json", app.Env.Domain, app.Env.Port)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
