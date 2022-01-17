@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/golang-api-template/router"
 
 	"github.com/charmixer/oas/exporter"
@@ -69,7 +69,7 @@ func (cmd *serveCmd) initTracing() func() {
 		return nil
 	}
 
-	shutdownTracing, err := tracing.SetupTracing(exporter, app.Env.Build.Name, app.Env.Build.Environment, app.Env.Build.Version)
+	shutdownTracing, err := tracing.SetupTracing(exporter, env.Env.Build.Name, env.Env.Build.Environment, env.Env.Build.Version)
 	if err == nil {
 		return shutdownTracing
 	}
@@ -80,15 +80,15 @@ func (cmd *serveCmd) initTracing() func() {
 }
 
 func (cmd *serveCmd) Execute(args []string) error {
-	app.Env.Ip = cmd.Public.Ip
-	app.Env.Port = cmd.Public.Port
-	app.Env.Domain = cmd.Public.Domain
-	app.Env.Addr = fmt.Sprintf("%s:%d", app.Env.Ip, app.Env.Port)
+	env.Env.Ip = cmd.Public.Ip
+	env.Env.Port = cmd.Public.Port
+	env.Env.Domain = cmd.Public.Domain
+	env.Env.Addr = fmt.Sprintf("%s:%d", env.Env.Ip, env.Env.Port)
 
 	shutdown := cmd.initTracing()
 	defer shutdown()
 
-	router := router.NewRouter(app.Env.Build.Name, Application.Description, app.Env.Build.Version)
+	router := router.NewRouter(env.Env.Build.Name, Application.Description, env.Env.Build.Version)
 
 	oasModel := exporter.ToOasModel(
 		router.OpenAPI,
@@ -98,10 +98,10 @@ func (cmd *serveCmd) Execute(args []string) error {
 		exporter.WithDescriptionTag("description"),
 		exporter.WithValidationTag("validation"),
 	)
-	app.Env.OpenAPI = oasModel
+	env.Env.OpenAPI = oasModel
 
 	srv := &http.Server{
-		Addr: app.Env.Addr,
+		Addr: env.Env.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout:      time.Second * time.Duration(cmd.Timeout.Write),
 		ReadTimeout:       time.Second * time.Duration(cmd.Timeout.Read),
@@ -112,7 +112,7 @@ func (cmd *serveCmd) Execute(args []string) error {
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
-		log.Info().Msg("Listening on " + app.Env.Addr)
+		log.Info().Msg("Listening on " + env.Env.Addr)
 		if err := srv.ListenAndServe(); err != nil {
 			log.Error().Err(err)
 		}

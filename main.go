@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/charmixer/golang-api-template/app"
 	"github.com/charmixer/golang-api-template/cmd"
+	"github.com/charmixer/golang-api-template/env"
 )
 
 var (
@@ -15,12 +15,12 @@ var (
 )
 
 func init() {
-	app.Env.Build.Name = name
-	app.Env.Build.Version = version
-	app.Env.Build.Tag = tag
-	app.Env.Build.Commit = commit
-	app.Env.Build.Date = date
-	app.Env.Build.Environment = environment
+	env.Env.Build.Name = name
+	env.Env.Build.Version = version
+	env.Env.Build.Tag = tag
+	env.Env.Build.Commit = commit
+	env.Env.Build.Date = date
+	env.Env.Build.Environment = environment
 }
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/host"
 )
@@ -118,7 +118,7 @@ func WithMemTotalAllocCheck(componentId string) HealthCheck {
 
 func WithBuildTagCheck(componentId string) HealthCheck {
 	return func(ctx context.Context, result chan healthCheckResult) {
-		buildValue := app.Env.Build.Tag
+		buildValue := env.Env.Build.Tag
 
 		if buildValue == "" {
 			result <- healthCheckResult{}
@@ -139,7 +139,7 @@ func WithBuildTagCheck(componentId string) HealthCheck {
 
 func WithBuildCommitCheck(componentId string) HealthCheck {
 	return func(ctx context.Context, result chan healthCheckResult) {
-		buildValue := app.Env.Build.Commit
+		buildValue := env.Env.Build.Commit
 
 		if buildValue == "" {
 			result <- healthCheckResult{}
@@ -160,7 +160,7 @@ func WithBuildCommitCheck(componentId string) HealthCheck {
 
 func WithBuildEnvironmentCheck(componentId string) HealthCheck {
 	return func(ctx context.Context, result chan healthCheckResult) {
-		buildValue := app.Env.Build.Environment
+		buildValue := env.Env.Build.Environment
 
 		if buildValue == "" {
 			result <- healthCheckResult{}
@@ -181,7 +181,7 @@ func WithBuildEnvironmentCheck(componentId string) HealthCheck {
 
 func WithBuildNameCheck(componentId string) HealthCheck {
 	return func(ctx context.Context, result chan healthCheckResult) {
-		buildValue := app.Env.Build.Name
+		buildValue := env.Env.Build.Name
 
 		if buildValue == "" {
 			result <- healthCheckResult{}
@@ -202,7 +202,7 @@ func WithBuildNameCheck(componentId string) HealthCheck {
 
 func WithBuildVersionCheck(componentId string) HealthCheck {
 	return func(ctx context.Context, result chan healthCheckResult) {
-		buildValue := app.Env.Build.Version
+		buildValue := env.Env.Build.Version
 
 		if buildValue == "" {
 			result <- healthCheckResult{}

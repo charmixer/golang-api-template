@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmixer/oas/api"
 
-	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/endpoint/problem"
 	hc "github.com/charmixer/golang-api-template/health"
@@ -113,8 +113,8 @@ func NewGetHealthReadyEndpoint() endpoint.EndpointHandler {
 
 	// Has to be set after init, since env is not available until then
 	healthChecker.SetOption(
-		hc.WithVersion(app.Env.Build.Version),
-		hc.WithReleaseId(app.Env.Build.Commit),
+		hc.WithVersion(env.Env.Build.Version),
+		hc.WithReleaseId(env.Env.Build.Commit),
 	)
 
 	ep.Setup(

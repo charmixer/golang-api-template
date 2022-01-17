@@ -1,4 +1,4 @@
-package app
+package env
 
 import (
 	oas "github.com/charmixer/oas/exporter"

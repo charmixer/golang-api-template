@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/oas/api"
 	"github.com/charmixer/oas/exporter"
 
@@ -42,7 +42,7 @@ func (ep GetOpenapiEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := app.Env.OpenAPI
+	response := env.Env.OpenAPI
 
 	responseType := ""
 	if request.Format == "json" {

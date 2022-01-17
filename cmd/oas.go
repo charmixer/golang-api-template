@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/charmixer/golang-api-template/app"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/golang-api-template/router"
 	"github.com/charmixer/oas/exporter"
 )
@@ -15,7 +15,7 @@ type oasCmd struct {
 }
 
 func (v *oasCmd) Execute(args []string) error {
-	router := router.NewRouter(app.Env.Build.Name, Application.Description, app.Env.Build.Version)
+	router := router.NewRouter(env.Env.Build.Name, Application.Description, env.Env.Build.Version)
 
 	oasModel := exporter.ToOasModel(router.OpenAPI)
 	oasYaml, err := yaml.Marshal(&oasModel)
