@@ -110,18 +110,21 @@ func (cmd *serveCmd) Execute(args []string) error {
 		Handler:           router.Handle(),
 	}
 
-	// Run our server in a goroutine so that it doesn't block.
-	go func() {
-		log.Info().Msg("Listening on " + env.Env.Addr)
-		if err := srv.ListenAndServe(); err != nil {
-			log.Error().Err(err)
-		}
-	}()
-
+	exitCode := 0
 	c := make(chan os.Signal, 1)
 	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
 	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
 	signal.Notify(c, os.Interrupt)
+
+	// Run our server in a goroutine so that it doesn't block.
+	go func() {
+		log.Info().Msg("Listening on " + env.Env.Addr)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Error().Err(err).Msg("Failed to open connection")
+			exitCode = 1
+			c <- os.Interrupt
+		}
+	}()
 
 	// Block until we receive our signal.
 	<-c
@@ -136,7 +139,7 @@ func (cmd *serveCmd) Execute(args []string) error {
 	// <-ctx.Done() if your application should wait for other services
 	// to finalize based on context cancellation.
 	log.Info().Msg("shutting down")
-	os.Exit(0)
+	os.Exit(exitCode)
 
 	return nil
 }
