@@ -61,6 +61,6 @@ If you get an error try setting `-d localhost`
 - [x] Setup changelog generator (https://github.com/charmixer/auto-changelog-action) - currently creates pull requests
   - [ ] Should somehow create the changelog before release tag is created, so it gets baked in
 - [x] Infrastructure reference stack - includes prometheus, jaeger and grafana
-- [x] Validation of cli inputs with (https://github.com/go-playground/validator)[go-playground] lib
+- [x] Validation of cli inputs with [go-playground](https://github.com/go-playground/validator) lib
 - [ ] README.md update with guides
 - [ ] HTTP Client with easy tracing propagation
