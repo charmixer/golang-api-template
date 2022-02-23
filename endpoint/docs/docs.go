@@ -11,8 +11,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 
-	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/golang-api-template/endpoint/problem"
+	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/oas/api"
 
 	"github.com/charmixer/golang-api-template/endpoint"

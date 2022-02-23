@@ -10,9 +10,7 @@ import (
 	"github.com/charmixer/oas/exporter"
 )
 
-type oasCmd struct {
-	// version   bool `short:"v" long:"version" description:"display version"`
-}
+type oasCmd struct{}
 
 func (v *oasCmd) Execute(args []string) error {
 	router := router.NewRouter(env.Env.Build.Name, Application.Description, env.Env.Build.Version)

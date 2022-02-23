@@ -8,9 +8,9 @@ import (
 
 	"github.com/charmixer/oas/api"
 
-	"github.com/charmixer/golang-api-template/env"
 	"github.com/charmixer/golang-api-template/endpoint"
 	"github.com/charmixer/golang-api-template/endpoint/problem"
+	"github.com/charmixer/golang-api-template/env"
 	hc "github.com/charmixer/golang-api-template/health"
 
 	"go.opentelemetry.io/otel"
