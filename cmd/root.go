@@ -8,11 +8,14 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/creasty/defaults"
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/charmixer/envconfig"
 	"github.com/charmixer/go-flags"
+
+	"github.com/charmixer/golang-api-template/validation"
 )
 
 type App struct {
@@ -32,17 +35,44 @@ var Application App
 var parser = flags.NewParser(&Application, flags.HelpFlag|flags.PassDoubleDash)
 
 func Execute() {
+
+	cmd := parser.GetCommand()
+
+	if cmd != nil {
+		err := validation.Validate.Struct(cmd)
+		if err != nil {
+			switch e := err.(type) {
+			case validator.ValidationErrors:
+				for _, verr := range e {
+					fmt.Printf("Validation failed for %s: %s\n", verr.StructNamespace(), verr.Translate(validation.Translation))
+				}
+			default:
+				fmt.Printf("%s\n", e.Error())
+			}
+
+			os.Exit(1)
+			return
+		}
+	}
+
 	_, err := parser.Execute()
 
+	retcode := 0
 	if err != nil {
-		e := err.(*flags.Error)
-		if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
-			fmt.Printf("%s\n", e.Message)
+		switch e := err.(type) {
+		case *flags.Error:
+			if e.Type != flags.ErrCommandRequired && e.Type != flags.ErrHelp {
+				fmt.Printf("%s\n", e.Message)
+			}
+		case error:
+			fmt.Printf("%s\n", err.Error())
+			retcode = 1
 		}
+
 		parser.WriteHelp(os.Stdout)
 	}
 
-	os.Exit(0)
+	os.Exit(retcode)
 }
 
 func init() {
@@ -77,9 +107,7 @@ func parseYamlFile(file string, config *App) {
 }
 
 func parseEnv(prefix string, config *App) {
-	if err := envconfig.Process(prefix, config); err != nil {
-		panic(err)
-	}
+	envconfig.MustProcess(prefix, config)
 }
 
 func parseFlags(config *App) {

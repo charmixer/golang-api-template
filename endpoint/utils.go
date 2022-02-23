@@ -5,22 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/charmixer/golang-api-template/endpoint/problem"
+	"github.com/charmixer/golang-api-template/validation"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/hetiansu5/urlquery"
 	"go.opentelemetry.io/otel"
-
-	"github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
-	"github.com/go-playground/validator/v10"
-	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
+/*
 var (
 	validate *validator.Validate
 	locale   string
@@ -47,14 +43,14 @@ func init() {
 
 	trans, _ = uni.GetTranslator(locale)
 	en_translations.RegisterDefaultTranslations(validate, trans)
-}
+}*/
 
 func WithRequestValidation(ctx context.Context, i interface{}) error {
 	tr := otel.Tracer("request")
 	ctx, span := tr.Start(ctx, "request-validation")
 	defer span.End()
 
-	err := validate.Struct(i)
+	err := validation.Validate.Struct(i)
 	if err == nil {
 		// No validation error, continue
 		return nil
@@ -62,7 +58,7 @@ func WithRequestValidation(ctx context.Context, i interface{}) error {
 
 	prob := problem.NewValidationProblem(http.StatusBadRequest)
 	for _, verr := range err.(validator.ValidationErrors) {
-		prob.Add(verr.Field(), verr.Translate(trans))
+		prob.Add(verr.Field(), verr.Translate(validation.Translation))
 	}
 
 	return prob
@@ -73,7 +69,7 @@ func WithResponseValidation(ctx context.Context, i interface{}) error {
 	ctx, span := tr.Start(ctx, "response-validation")
 	defer span.End()
 
-	err := validate.Struct(i)
+	err := validation.Validate.Struct(i)
 	if err == nil {
 		// No validation error, continue
 		return nil
@@ -81,7 +77,7 @@ func WithResponseValidation(ctx context.Context, i interface{}) error {
 
 	prob := problem.NewValidationProblem(http.StatusInternalServerError)
 	for _, verr := range err.(validator.ValidationErrors) {
-		prob.Add(verr.Field(), verr.Translate(trans))
+		prob.Add(verr.Field(), verr.Translate(validation.Translation))
 	}
 
 	return prob
