@@ -16,35 +16,6 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-/*
-var (
-	validate *validator.Validate
-	locale   string
-	trans    ut.Translator
-)
-
-func init() {
-	validate = validator.New()
-
-	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-
-		if name == "-" {
-			return ""
-		}
-
-		return name
-	})
-
-	locale = "en"
-
-	enTranslator := en.New()
-	uni := ut.New(enTranslator, enTranslator)
-
-	trans, _ = uni.GetTranslator(locale)
-	en_translations.RegisterDefaultTranslations(validate, trans)
-}*/
-
 func WithRequestValidation(ctx context.Context, i interface{}) error {
 	tr := otel.Tracer("request")
 	ctx, span := tr.Start(ctx, "request-validation")
